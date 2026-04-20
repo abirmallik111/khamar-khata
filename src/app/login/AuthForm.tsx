@@ -1,0 +1,163 @@
+'use client'
+
+import { useState } from 'react'
+import Image from 'next/image'
+import { login, signup } from './actions'
+import { User, Mail, Lock, ShieldCheck, Loader2 } from 'lucide-react'
+
+export function AuthForm({ message }: { message?: string }) {
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
+  const [isPending, setIsPending] = useState(false)
+  const [localError, setLocalError] = useState<string | null>(null)
+
+  const handleAction = async (formData: FormData) => {
+    setIsPending(true)
+    setLocalError(null)
+
+    if (activeTab === 'register') {
+      const password = formData.get('password') as string
+      const confirmPassword = formData.get('confirm_password') as string
+
+      if (password !== confirmPassword) {
+        setLocalError('Passwords do not match')
+        setIsPending(false)
+        return
+      }
+      await signup(formData)
+    } else {
+      await login(formData)
+    }
+    
+    // If the above actions redirect, this won't be reached
+    setIsPending(false)
+  }
+
+  return (
+    <div className="w-full">
+      <div className="flex flex-col items-center justify-center gap-4 mb-10">
+        <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-(--color-primary)/20 shadow-xl bg-white">
+          <Image 
+            src="/logo.jpg" 
+            alt="Khamar Khata Logo" 
+            fill
+            className="object-cover"
+            priority
+          />
+        </div>
+        <div className="flex flex-col items-center">
+          <h1 className="text-4xl font-black tracking-tight font-display text-(--color-primary)">Khamar</h1>
+          <h1 className="text-4xl font-black tracking-tight font-display text-amber-900 -mt-2">Khata</h1>
+        </div>
+      </div>
+
+      <div className="bg-(--color-surface-lowest) rounded-3xl shadow-ambient overflow-hidden border border-(--color-surface-high)/50">
+        {/* Tabs */}
+        <div className="flex border-b border-(--color-surface-high)">
+          <button
+            onClick={() => { setActiveTab('login'); setLocalError(null); }}
+            className={`flex-1 py-5 font-bold transition-all ${
+              activeTab === 'login'
+                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] bg-[var(--color-primary)]/5'
+                : 'text-(--color-on-surface-variant) hover:bg-(--color-surface-high)/30'
+            }`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => { setActiveTab('register'); setLocalError(null); }}
+            className={`flex-1 py-5 font-bold transition-all ${
+              activeTab === 'register'
+                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] bg-[var(--color-primary)]/5'
+                : 'text-(--color-on-surface-variant) hover:bg-(--color-surface-high)/30'
+            }`}
+          >
+            Register
+          </button>
+        </div>
+
+        <form action={handleAction} className="p-8 flex flex-col gap-6">
+          {activeTab === 'register' && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="name">
+                <User className="w-4 h-4 text-[var(--color-primary)]" />
+                Full Name
+              </label>
+              <input
+                className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+                name="name"
+                placeholder="Rahim Miah"
+                required
+              />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="email">
+              <Mail className="w-4 h-4 text-[var(--color-primary)]" />
+              Email Address
+            </label>
+            <input
+              className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+              type="email"
+              name="email"
+              placeholder="farmer@example.com"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="password">
+              <Lock className="w-4 h-4 text-[var(--color-primary)]" />
+              Password
+            </label>
+            <input
+              className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          {activeTab === 'register' && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="confirm_password">
+                <ShieldCheck className="w-4 h-4 text-[var(--color-primary)]" />
+                Confirm Password
+              </label>
+              <input
+                className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+                type="password"
+                name="confirm_password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          )}
+
+          {(localError || message) && (
+            <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] text-center rounded-xl font-medium border border-[var(--color-error)]/20 animate-shake">
+              {localError || message}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="mt-4 bg-gradient-primary rounded-2xl py-4 text-(--color-on-primary) font-black text-lg shadow-lg hover:shadow-[var(--color-primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+          >
+            {isPending ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              activeTab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'
+            )}
+          </button>
+        </form>
+      </div>
+      
+      <p className="text-center mt-10 text-(--color-on-surface-variant) text-sm font-medium">
+        Secure authentication powered by <span className="text-[var(--color-primary)] font-bold">Supabase</span>
+      </p>
+    </div>
+  )
+}
