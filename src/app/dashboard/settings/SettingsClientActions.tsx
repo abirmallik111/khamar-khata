@@ -44,7 +44,7 @@ export function SettingsClientActions() {
       {/* Simple Mode Toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-semibold text-(--color-on-background)">Simple Mode</p>
+          <p className="font-semibold text-(--color-on-background)">Simple Mode </p>
           <p className="text-sm text-(--color-on-surface-variant) mt-1">
             Reduces visual effects for slower devices and low-bandwidth connections.
           </p>
