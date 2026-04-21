@@ -1,16 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import { addSale } from '../actions'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Goat = { id: string; name_or_tag: string; purchase_price: number }
 
 export function AddSaleForm({ goats }: { goats: Goat[] }) {
   const { currencySymbol, formatCurrency } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGoatId, setSelectedGoatId] = useState<string>('')
   const [salePrice, setSalePrice] = useState<string>('')
@@ -28,17 +28,13 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
       await addSale(formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while recording the sale.')
-      setIsSubmitting(false)
     }
   }
 
@@ -54,7 +50,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
           <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
@@ -156,18 +152,17 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
           <Link 
             href="/dashboard/sales"
-            className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors"
+            className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors"
           >
             Cancel
           </Link>
-          <button
-            type="submit"
-            disabled={isSubmitting || goats.length === 0}
-            className="bg-gradient-primary text-(--color-on-primary) px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          <SubmitButton
+            loadingText="Recording..."
+            disabled={goats.length === 0}
+            className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Recording...' : 'Record Sale'}
-          </button>
+            Record Sale
+          </SubmitButton>
         </div>
       </form>
     </>

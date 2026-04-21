@@ -3,15 +3,14 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { login, signup } from './actions'
-import { User, Mail, Lock, ShieldCheck, Loader2 } from 'lucide-react'
+import { User, Mail, Lock, ShieldCheck } from 'lucide-react'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export function AuthForm({ message }: { message?: string }) {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
-  const [isPending, setIsPending] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
   const handleAction = async (formData: FormData) => {
-    setIsPending(true)
     setLocalError(null)
 
     if (activeTab === 'register') {
@@ -20,22 +19,18 @@ export function AuthForm({ message }: { message?: string }) {
 
       if (password !== confirmPassword) {
         setLocalError('Passwords do not match')
-        setIsPending(false)
         return
       }
       await signup(formData)
     } else {
       await login(formData)
     }
-    
-    // If the above actions redirect, this won't be reached
-    setIsPending(false)
   }
 
   return (
     <div className="w-full">
       <div className="flex flex-col items-center justify-center gap-4 mb-10">
-        <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-(--color-primary)/20 shadow-xl bg-white">
+        <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-primary/20 shadow-xl bg-white">
           <Image 
             src="/logo.jpg" 
             alt="Khamar Khata Logo" 
@@ -45,7 +40,7 @@ export function AuthForm({ message }: { message?: string }) {
           />
         </div>
         <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-black tracking-tight font-display text-(--color-primary)">Khamar</h1>
+          <h1 className="text-4xl font-black tracking-tight font-display text-primary">Khamar</h1>
           <h1 className="text-4xl font-black tracking-tight font-display text-amber-900 -mt-2">Khata</h1>
         </div>
       </div>
@@ -54,6 +49,7 @@ export function AuthForm({ message }: { message?: string }) {
         {/* Tabs */}
         <div className="flex border-b border-(--color-surface-high)">
           <button
+            type="button"
             onClick={() => { setActiveTab('login'); setLocalError(null); }}
             className={`flex-1 py-5 font-bold transition-all ${
               activeTab === 'login'
@@ -64,6 +60,7 @@ export function AuthForm({ message }: { message?: string }) {
             Sign In
           </button>
           <button
+            type="button"
             onClick={() => { setActiveTab('register'); setLocalError(null); }}
             className={`flex-1 py-5 font-bold transition-all ${
               activeTab === 'register'
@@ -83,7 +80,7 @@ export function AuthForm({ message }: { message?: string }) {
                 Full Name
               </label>
               <input
-                className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
+                className="rounded-xl px-4 py-4 bg-(--color-surface-high)/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
                 name="name"
                 placeholder="Rahim Miah"
                 required
@@ -97,7 +94,7 @@ export function AuthForm({ message }: { message?: string }) {
               Email Address
             </label>
             <input
-              className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
+              className="rounded-xl px-4 py-4 bg-(--color-surface-high)/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
               type="email"
               name="email"
               placeholder="farmer@example.com"
@@ -111,7 +108,7 @@ export function AuthForm({ message }: { message?: string }) {
               Password
             </label>
             <input
-              className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
+              className="rounded-xl px-4 py-4 bg-(--color-surface-high)/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
               type="password"
               name="password"
               placeholder="••••••••"
@@ -126,7 +123,7 @@ export function AuthForm({ message }: { message?: string }) {
                 Confirm Password
               </label>
               <input
-                className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
+                className="rounded-xl px-4 py-4 bg-(--color-surface-high)/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
                 type="password"
                 name="confirm_password"
                 placeholder="••••••••"
@@ -141,17 +138,12 @@ export function AuthForm({ message }: { message?: string }) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="mt-4 bg-gradient-primary rounded-2xl py-4 text-(--color-on-primary) font-black text-lg shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+          <SubmitButton
+            loadingText=""
+            className="mt-4 bg-gradient-primary rounded-2xl py-4 text-white font-black text-lg shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
           >
-            {isPending ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              activeTab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'
-            )}
-          </button>
+            {activeTab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'}
+          </SubmitButton>
         </form>
       </div>
       

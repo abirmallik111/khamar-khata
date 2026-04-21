@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { addOwner, deleteOwner } from './actions'
-import { Loader2, Trash2, ShieldAlert, ArrowRight, Info } from 'lucide-react'
+import { Trash2, ShieldAlert, ArrowRight, Info } from 'lucide-react'
 import Link from 'next/link'
+import { SubmitButton } from '@/components/SubmitButton'
 
 type Owner = {
   id: string
@@ -12,28 +13,22 @@ type Owner = {
 }
 
 export function OwnerClientPage({ owners }: { owners: Owner[] }) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
   
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   
   const currentTotalShare = owners.reduce((sum, o) => sum + Number(o.share_percentage), 0)
   const remainingShare = 100 - currentTotalShare
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(form)
       await addOwner(formData)
-      form.reset()
+      formRef.current?.reset()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to add owner')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -146,7 +141,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
       {/* Add Owner Form (Always show if < 100, or allow multiple) */}
       <section className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8">
         <h2 className="font-bold text-xl mb-6">Add New Partner</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form action={handleAction} ref={formRef} className="flex flex-col gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="name">
@@ -182,14 +177,12 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
+          <SubmitButton
+            loadingText="Adding..."
             className="bg-gradient-primary text-(--color-on-primary) px-8 py-3 rounded-full font-bold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 self-end sm:self-start"
           >
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Adding...' : 'Register Partner'}
-          </button>
+            Register Partner
+          </SubmitButton>
         </form>
       </section>
     </div>

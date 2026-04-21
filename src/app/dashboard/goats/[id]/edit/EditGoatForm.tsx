@@ -8,6 +8,7 @@ import Link from 'next/link'
 import imageCompression from 'browser-image-compression'
 import { updateGoat, deleteGoat } from '../../actions'
 import { Goat, Owner, OwnerContribution } from '@/types'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export function EditGoatForm({ 
   goat, 
@@ -19,7 +20,6 @@ export function EditGoatForm({
   initialContributions: Pick<OwnerContribution, 'owner_id' | 'amount'>[] 
 }) {
   const { currencySymbol, formatCurrency } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(goat.image_url)
@@ -69,13 +69,10 @@ export function EditGoatForm({
   const totalContrib = calculateTotalContributions()
   const isBalanced = source === 'born' || Math.abs(totalContrib - (parseFloat(purchasePrice) || 0)) < 0.01
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
       if (removeImage) {
         formData.set('remove_image', 'true')
       }
@@ -105,7 +102,6 @@ export function EditGoatForm({
         await updateGoat(goat.id, formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while updating the goat.')
-      setIsSubmitting(false)
     }
   }
 
@@ -147,7 +143,7 @@ export function EditGoatForm({
           )}
           <button
             onClick={handleDelete}
-            disabled={isDeleting || isSubmitting}
+            disabled={isDeleting}
             className={`p-3 rounded-full transition-all ${showConfirm ? 'bg-red-500 text-white shadow-lg scale-110' : 'text-red-500 hover:bg-red-500/10'} disabled:opacity-50`}
             title={showConfirm ? "Confirm Delete" : "Delete Goat"}
           >
@@ -156,7 +152,7 @@ export function EditGoatForm({
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
           <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
@@ -362,18 +358,17 @@ export function EditGoatForm({
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
           <Link 
             href={`/dashboard/goats/${goat.id}`}
-            className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors"
+            className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors"
           >
             Cancel
           </Link>
-          <button
-            type="submit"
-            disabled={isSubmitting || isDeleting}
-            className="bg-gradient-primary text-(--color-on-primary) px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          <SubmitButton
+            loadingText="Saving..."
+            disabled={isDeleting}
+            className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
-          </button>
+            Save Changes
+          </SubmitButton>
         </div>
       </form>
     </>

@@ -6,6 +6,7 @@ import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import { updateSale, deleteSale } from '../../actions'
 import { Sale, Goat } from '@/types'
+import { SubmitButton } from '@/components/SubmitButton'
 
 interface EditSaleFormProps {
   sale: Sale & {
@@ -15,22 +16,17 @@ interface EditSaleFormProps {
 
 export function EditSaleForm({ sale }: EditSaleFormProps) {
   const { currencySymbol } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
       await updateSale(sale.id, formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while updating the sale.')
-      setIsSubmitting(false)
     }
   }
 
@@ -71,7 +67,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
           )}
           <button
             onClick={handleDelete}
-            disabled={isDeleting || isSubmitting}
+            disabled={isDeleting}
             className={`p-3 rounded-full transition-all ${showConfirm ? 'bg-red-500 text-white shadow-lg scale-110' : 'text-red-500 hover:bg-red-500/10'} disabled:opacity-50`}
             title={showConfirm ? "Confirm Delete" : "Delete Sale"}
           >
@@ -80,7 +76,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
           <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
@@ -133,15 +129,14 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
-          <Link href="/dashboard/sales" className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <button
-            type="submit"
-            disabled={isSubmitting || isDeleting}
+          <Link href="/dashboard/sales" className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
+          <SubmitButton
+            loadingText="Saving..."
+            disabled={isDeleting}
             className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
           >
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Saving...' : 'Update Sale Record'}
-          </button>
+            Update Sale Record
+          </SubmitButton>
         </div>
       </form>
     </>

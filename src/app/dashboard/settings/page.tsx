@@ -4,6 +4,7 @@ import { Settings2, Users, Tag, Database } from 'lucide-react'
 import { SettingsClientActions } from './SettingsClientActions'
 import { BackupRestoreSection } from './BackupRestoreSection'
 import { deleteCategory } from './actions'
+import { DeleteCategoryButton } from '@/components/DeleteCategoryButton'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -65,9 +66,7 @@ export default async function SettingsPage() {
                     'use server'
                     await deleteCategory(cat.id)
                   }}>
-                    <button type="submit" className="text-xs text-error hover:underline px-2 py-1">
-                      Remove
-                    </button>
+                    <DeleteCategoryButton />
                   </form>
                 </li>
               ))}

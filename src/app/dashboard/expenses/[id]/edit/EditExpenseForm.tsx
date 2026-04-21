@@ -6,6 +6,7 @@ import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import { updateExpense, deleteExpense } from '../../actions'
 import { Category, Goat, Owner, Expense } from '@/types'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export function EditExpenseForm({ 
   expense,
@@ -23,7 +24,6 @@ export function EditExpenseForm({
   initialContributions: { owner_id: string, amount: number }[]
 }) {
   const { currencySymbol } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -61,13 +61,10 @@ export function EditExpenseForm({
   const dueAmount = Math.max(0, (parseFloat(totalAmount) || 0) - paidAmount)
   const paymentStatus = paidAmount === 0 ? 'due' : dueAmount === 0 ? 'paid' : 'partial'
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
       Array.from(selectedGoats).forEach(goatId => formData.append('goat_ids', goatId))
       formData.set('paid_amount', paidAmount.toString())
       formData.set('due_amount', dueAmount.toString())
@@ -82,7 +79,6 @@ export function EditExpenseForm({
       await updateExpense(expense.id, formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while updating the expense.')
-      setIsSubmitting(false)
     }
   }
 
@@ -123,7 +119,7 @@ export function EditExpenseForm({
           )}
           <button
             onClick={handleDelete}
-            disabled={isDeleting || isSubmitting}
+            disabled={isDeleting}
             className={`p-3 rounded-full transition-all ${showConfirm ? 'bg-red-500 text-white shadow-lg scale-110' : 'text-red-500 hover:bg-red-500/10'} disabled:opacity-50`}
             title={showConfirm ? "Confirm Delete" : "Delete Expense"}
           >
@@ -138,7 +134,7 @@ export function EditExpenseForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1 flex flex-col gap-2">
@@ -256,11 +252,14 @@ export function EditExpenseForm({
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
-          <Link href="/dashboard/expenses" className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <button type="submit" disabled={isSubmitting || isDeleting} className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Saving...' : 'Update Expense'}
-          </button>
+          <Link href="/dashboard/expenses" className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
+          <SubmitButton 
+            loadingText="Saving..."
+            disabled={isDeleting} 
+            className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+          >
+            Update Expense
+          </SubmitButton>
         </div>
       </form>
     </>

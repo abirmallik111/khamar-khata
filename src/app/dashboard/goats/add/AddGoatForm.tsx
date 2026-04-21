@@ -2,16 +2,16 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Upload, Loader2, Info } from 'lucide-react'
+import { ArrowLeft, Upload, Info } from 'lucide-react'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import imageCompression from 'browser-image-compression'
 import { addGoat } from '../actions'
 import { Owner } from '@/types'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[] }) {
   const { currencySymbol, formatCurrency } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -42,19 +42,15 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
   const totalToPay = parseFloat(purchasePrice) || 0
   const isBalanced = source === 'born' || Math.abs(paidAmount - totalToPay) < 0.01
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    
+  const handleAction = async (formData: FormData) => {
     if (source === 'purchased' && !isBalanced) {
       setError(`Total paid (${formatCurrency(paidAmount)}) does not match purchase price (${formatCurrency(totalToPay)})`)
       return
     }
 
-    setIsSubmitting(true)
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
       formData.set('source', source)
       
       if (source === 'born') {
@@ -80,7 +76,6 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
       await addGoat(formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while adding the goat.')
-      setIsSubmitting(false)
     }
   }
 
@@ -96,7 +91,7 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
         </div>
       </header>
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
           <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
@@ -269,15 +264,14 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
-          <Link href="/dashboard/goats" className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <button
-            type="submit"
-            disabled={isSubmitting || (source === 'purchased' && !isBalanced)}
-            className="bg-gradient-primary text-(--color-on-primary) px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          <Link href="/dashboard/goats" className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
+          <SubmitButton
+            loadingText="Saving..."
+            disabled={source === 'purchased' && !isBalanced}
+            className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Saving...' : 'Register Goat'}
-          </button>
+            Register Goat
+          </SubmitButton>
         </div>
       </form>
     </>

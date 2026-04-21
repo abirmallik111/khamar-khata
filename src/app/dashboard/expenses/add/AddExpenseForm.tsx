@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, Loader2, Plus } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import { addExpense, addCategory } from '../actions'
 import { Category, Goat, Owner } from '@/types'
+import { SubmitButton } from '@/components/SubmitButton'
 
 export function AddExpenseForm({ 
   categories, 
@@ -17,7 +18,6 @@ export function AddExpenseForm({
   owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[]
 }) {
   const { currencySymbol, formatCurrency } = useFormat()
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGoats, setSelectedGoats] = useState<Set<string>>(new Set())
   
@@ -68,14 +68,10 @@ export function AddExpenseForm({
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  const handleAction = async (formData: FormData) => {
     setError(null)
 
     try {
-      const formData = new FormData(e.currentTarget)
-      
       // Add selected goats
       Array.from(selectedGoats).forEach(goatId => {
         formData.append('goat_ids', goatId)
@@ -96,7 +92,6 @@ export function AddExpenseForm({
       await addExpense(formData)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while adding the expense.')
-      setIsSubmitting(false)
     }
   }
 
@@ -142,7 +137,8 @@ export function AddExpenseForm({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+      <form action={handleAction} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
+
         
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1 flex flex-col gap-2">
@@ -262,11 +258,14 @@ export function AddExpenseForm({
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
-          <Link href="/dashboard/expenses" className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <button type="submit" disabled={isSubmitting || categories.length === 0} className="bg-error text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-            {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
-            {isSubmitting ? 'Saving...' : 'Save Expense'}
-          </button>
+          <Link href="/dashboard/expenses" className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
+          <SubmitButton 
+            loadingText="Saving..."
+            disabled={categories.length === 0} 
+            className="bg-error text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            Save Expense
+          </SubmitButton>
         </div>
       </form>
     </>
