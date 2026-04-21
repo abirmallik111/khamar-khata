@@ -83,7 +83,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
       <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
-          <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] rounded-md text-sm font-medium">
+          <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
             {error}
           </div>
         )}
@@ -100,7 +100,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
             id="sale_price"
             name="sale_price"
             defaultValue={sale.sale_price}
-            className="rounded-md px-4 py-4 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-blue-500 outline-none transition-all font-display text-2xl font-bold text-blue-600"
+            className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-blue-500 outline-none transition-all font-display text-2xl font-bold text-blue-600"
           />
         </div>
 
@@ -114,7 +114,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
             id="sale_date"
             name="sale_date"
             defaultValue={sale.sale_date}
-            className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+            className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
           />
         </div>
 
@@ -127,7 +127,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
             name="note"
             defaultValue={sale.note || ''}
             rows={3}
-            className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all resize-none"
+            className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all resize-none"
             placeholder="Details about the buyer or transaction..."
           />
         </div>

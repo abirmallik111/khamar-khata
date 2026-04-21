@@ -41,7 +41,7 @@ export default async function SalesPage() {
         </Link>
       </header>
 
-      {error && <div className="text-[var(--color-error)] p-4 bg-[var(--color-error)]/10 rounded-md">Failed to load sales.</div>}
+      {error && <div className="text-error p-4 bg-error/10 rounded-md">Failed to load sales.</div>}
       
       {!error && sales?.length === 0 ? (
         <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-12 text-center text-(--color-on-surface-variant) mt-4">

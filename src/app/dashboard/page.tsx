@@ -85,23 +85,23 @@ export default async function DashboardPage() {
 
       {/* Quick Actions (Mobile Priority) */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 hide-scrollbar">
-        <Link href="/dashboard/goats/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-[var(--color-primary)] text-[var(--color-primary)] px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-[var(--color-primary)] hover:text-white transition-colors">
+        <Link href="/dashboard/goats/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-primary hover:text-white transition-colors">
           <PlusCircle className="w-5 h-5" />
           Add Goat
         </Link>
-        <Link href="/dashboard/expenses/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-[var(--color-error)] text-[var(--color-error)] px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-[var(--color-error)] hover:text-white transition-colors">
+        <Link href="/dashboard/expenses/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-error text-error px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-error hover:text-white transition-colors">
           <PlusCircle className="w-5 h-5" />
           Log Expense
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-[var(--color-primary)]">
+        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-primary">
           <span className="text-sm font-medium text-(--color-on-surface-variant)">Total Capital (Goat Cost)</span>
           <span className="text-3xl font-display font-bold">{formatCurrency(totalCapital, currencyCode)}</span>
         </div>
         
-        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-[var(--color-error)]">
+        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-error">
           <span className="text-sm font-medium text-(--color-on-surface-variant)">Total Expenses</span>
           <span className="text-3xl font-display font-bold">{formatCurrency(totalExpense, currencyCode)}</span>
         </div>
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
 
       <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2">
         <span className="text-sm font-medium text-(--color-on-surface-variant)">Net Profit / Loss</span>
-        <span className={`text-4xl font-display font-bold ${profit >= 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]'}`}>
+        <span className={`text-4xl font-display font-bold ${profit >= 0 ? 'text-primary' : 'text-error'}`}>
           {profit >= 0 && totalSales > 0 ? '+' : ''}{formatCurrency(profit, currencyCode)}
         </span>
         {profit < 0 && totalSales === 0 && (
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
                 {activity.map((item, idx) => (
                   <div key={`${item.type}-${idx}`} className={`p-4 flex justify-between items-center ${idx !== activity.length - 1 ? 'border-b border-(--color-surface-high)' : ''}`}>
                     <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${item.type === 'goat' ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'bg-[var(--color-error)]/10 text-[var(--color-error)]'}`}>
+                      <div className={`p-2 rounded-full ${item.type === 'goat' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'}`}>
                         {item.type === 'goat' ? <PlusCircle className="w-5 h-5" /> : <List className="w-5 h-5" />}
                       </div>
                       <div>
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
                         <p className="text-[10px] text-(--color-on-surface-variant)">{formatDate(new Date(item.date).toISOString())}</p>
                       </div>
                     </div>
-                    <span className={`font-bold text-sm ${item.type === 'goat' ? 'text-(--color-on-background)' : 'text-[var(--color-error)]'}`}>
+                    <span className={`font-bold text-sm ${item.type === 'goat' ? 'text-(--color-on-background)' : 'text-error'}`}>
                       {item.type === 'expense' ? '-' : ''}{formatCurrency(item.type === 'goat' ? (item.data as any).purchase_price : (item.data as any).amount, currencyCode)}
                     </span>
                   </div>

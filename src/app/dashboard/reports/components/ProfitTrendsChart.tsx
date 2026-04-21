@@ -20,7 +20,7 @@ export function ProfitTrendsChart({ data }: { data: TrendData[] }) {
         <h2 className="font-bold text-lg font-display">Monthly Profit Trends</h2>
         <div className="flex gap-4 text-xs font-medium">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-[var(--color-primary)]"></div>
+            <div className="w-3 h-3 rounded-sm bg-primary"></div>
             <span>Revenue</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -48,7 +48,7 @@ export function ProfitTrendsChart({ data }: { data: TrendData[] }) {
               ></div>
               {/* Sale Bar */}
               <div 
-                className="w-1/2 bg-[var(--color-primary)] rounded-t-sm transition-all hover:brightness-110"
+                className="w-1/2 bg-primary rounded-t-sm transition-all hover:brightness-110"
                 style={{ height: `${(d.total_sale / maxVal) * 100}%`, minHeight: d.total_sale > 0 ? '4px' : '0' }}
               ></div>
             </div>

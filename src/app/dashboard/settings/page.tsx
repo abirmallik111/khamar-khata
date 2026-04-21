@@ -65,7 +65,7 @@ export default async function SettingsPage() {
                     'use server'
                     await deleteCategory(cat.id)
                   }}>
-                    <button type="submit" className="text-xs text-[var(--color-error)] hover:underline px-2 py-1">
+                    <button type="submit" className="text-xs text-error hover:underline px-2 py-1">
                       Remove
                     </button>
                   </form>
@@ -78,7 +78,7 @@ export default async function SettingsPage() {
             </p>
           )}
           <div className="px-4 py-3 border-t border-(--color-surface-high)">
-            <Link href="/dashboard/expenses/add" className="text-sm text-[var(--color-primary)] hover:underline font-medium">
+            <Link href="/dashboard/expenses/add" className="text-sm text-primary hover:underline font-medium">
               + Add a category via the expense form
             </Link>
           </div>
@@ -98,18 +98,18 @@ export default async function SettingsPage() {
                 {owners.map(o => (
                   <li key={o.id} className="flex justify-between items-center py-2 border-b border-(--color-surface-high)">
                     <span className="font-medium">{o.name}</span>
-                    <span className="font-bold text-[var(--color-primary)]">{o.share_percentage}%</span>
+                    <span className="font-bold text-primary">{o.share_percentage}%</span>
                   </li>
                 ))}
               </ul>
-              <div className={`text-sm font-medium px-3 py-2 rounded-md ${totalShare === 100 ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'bg-yellow-500/10 text-yellow-600'}`}>
+              <div className={`text-sm font-medium px-3 py-2 rounded-md ${totalShare === 100 ? 'bg-primary/10 text-primary' : 'bg-yellow-500/10 text-yellow-600'}`}>
                 Total allocated: {totalShare}% {totalShare < 100 ? `(${100 - totalShare}% unallocated)` : '✓'}
               </div>
             </>
           ) : (
             <p className="text-sm text-(--color-on-surface-variant) italic">No partners added yet.</p>
           )}
-          <Link href="/dashboard/settings/owners" className="self-start bg-(--color-surface-high) hover:bg-[var(--color-primary)] hover:text-white text-(--color-on-surface-variant) px-4 py-2 rounded-full text-sm font-semibold transition-colors">
+          <Link href="/dashboard/settings/owners" className="self-start bg-(--color-surface-high) hover:bg-primary hover:text-white text-(--color-on-surface-variant) px-4 py-2 rounded-full text-sm font-semibold transition-colors">
             Manage Partners →
           </Link>
         </div>

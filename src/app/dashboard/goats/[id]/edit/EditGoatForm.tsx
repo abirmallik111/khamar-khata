@@ -159,7 +159,7 @@ export function EditGoatForm({
       <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
-          <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] rounded-md text-sm font-medium">
+          <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
             {error}
           </div>
         )}
@@ -172,14 +172,14 @@ export function EditGoatForm({
             <button
               type="button"
               onClick={() => setSource('purchased')}
-              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'purchased' ? 'bg-white shadow-sm text-[var(--color-primary)]' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
+              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'purchased' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
             >
               Purchased
             </button>
             <button
               type="button"
               onClick={() => setSource('born')}
-              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'born' ? 'bg-white shadow-sm text-[var(--color-primary)]' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
+              className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'born' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
             >
               Born on Farm
             </button>
@@ -196,7 +196,7 @@ export function EditGoatForm({
               id="name_or_tag"
               name="name_or_tag"
               defaultValue={goat.name_or_tag}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
               placeholder="e.g. G-101 or Billy"
             />
           </div>
@@ -209,7 +209,7 @@ export function EditGoatForm({
               id="breed"
               name="breed"
               defaultValue={goat.breed || ''}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
               placeholder="e.g. Black Bengal"
             />
           </div>
@@ -224,7 +224,7 @@ export function EditGoatForm({
               id="gender"
               name="gender"
               defaultValue={goat.gender || 'Male'}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all appearance-none"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
             >
               <option value="Male">Male</option>
               <option value="Female">Female</option>
@@ -240,7 +240,7 @@ export function EditGoatForm({
               name="status"
               required
               defaultValue={goat.status}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all appearance-none"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
             >
               <option value="active">Active</option>
               <option value="sick">Sick</option>
@@ -265,7 +265,7 @@ export function EditGoatForm({
               name="purchase_price"
               value={purchasePrice}
               onChange={(e) => setPurchasePrice(e.target.value)}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all font-mono"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all font-mono"
               placeholder="0.00"
             />
           </div>
@@ -280,7 +280,7 @@ export function EditGoatForm({
               id="purchase_date"
               name="purchase_date"
               defaultValue={goat.purchase_date}
-              className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+              className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
             />
           </div>
         </div>
@@ -311,7 +311,7 @@ export function EditGoatForm({
                       placeholder="0.00"
                       value={ownerContributions[owner.id] || ''}
                       onChange={(e) => handleContributionChange(owner.id, e.target.value)}
-                      className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-[var(--color-primary)] outline-none transition-all"
+                      className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-primary outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -335,7 +335,7 @@ export function EditGoatForm({
             <div className="flex flex-col gap-4">
                <label 
                 htmlFor="image" 
-                className={`flex flex-col items-center justify-center w-full aspect-video sm:aspect-[21/9] border-2 border-dashed rounded-md cursor-pointer transition-colors ${previewUrl ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-(--color-surface-high) bg-(--color-surface-low) hover:bg-(--color-surface-high)'} overflow-hidden`}
+                className={`flex flex-col items-center justify-center w-full aspect-video sm:aspect-[21/9] border-2 border-dashed rounded-md cursor-pointer transition-colors ${previewUrl ? 'border-primary bg-primary/5' : 'border-(--color-surface-high) bg-(--color-surface-low) hover:bg-(--color-surface-high)'} overflow-hidden`}
               >
                 {previewUrl ? (
                   <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />

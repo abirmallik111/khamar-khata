@@ -36,12 +36,12 @@ export function FinancialStatementTable({ categories, totalRevenue, totalInvestm
             {/* Sales Row */}
             <tr className="hover:bg-(--color-surface-low) transition-colors">
               <td className="px-6 py-4 font-bold flex items-center gap-3">
-                <div className="w-2 h-8 rounded-full bg-[var(--color-primary)]"></div>
+                <div className="w-2 h-8 rounded-full bg-primary"></div>
                 Livestock Sales
               </td>
               <td className="px-6 py-4 text-right font-medium">{formatCompactNumber(totalRevenue, currency)}</td>
               <td className="px-6 py-4 text-right text-(--color-on-surface-variant)">-{currencySymbol}0.00</td>
-              <td className="px-6 py-4 text-right font-bold text-[var(--color-primary)]">{formatCompactNumber(totalRevenue, currency)}</td>
+              <td className="px-6 py-4 text-right font-bold text-primary">{formatCompactNumber(totalRevenue, currency)}</td>
             </tr>
 
             {/* Expenses by Category */}
@@ -53,14 +53,14 @@ export function FinancialStatementTable({ categories, totalRevenue, totalInvestm
                   </td>
                   <td className="px-6 py-4 text-right font-medium">{formatCompactNumber(cat.total_amount, currency)}</td>
                   <td className="px-6 py-4 text-right text-(--color-on-surface-variant)">-{currencySymbol}0.00</td>
-                  <td className="px-6 py-4 text-right font-bold text-[var(--color-error)]">-{formatCompactNumber(cat.total_amount, currency)}</td>
+                  <td className="px-6 py-4 text-right font-bold text-error">-{formatCompactNumber(cat.total_amount, currency)}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr className="bg-(--color-surface-low)/50">
               <td className="px-6 py-6 font-display text-lg font-bold">Total Operating Profit</td>
-              <td colSpan={3} className="px-6 py-6 text-right font-display text-2xl font-bold text-[var(--color-primary)]">
+              <td colSpan={3} className="px-6 py-6 text-right font-display text-2xl font-bold text-primary">
                 {formatCompactNumber(totalRevenue - totalInvestment, currency)}
               </td>
             </tr>

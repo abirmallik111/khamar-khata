@@ -69,7 +69,7 @@ export default async function DashboardLayout({
         </nav>
 
         <form action={signOut} className="mt-auto">
-          <button className="flex items-center gap-3 px-3 py-3 w-full rounded-md hover:bg-[var(--color-error)]/10 text-[var(--color-error)] transition-colors font-medium">
+          <button className="flex items-center gap-3 px-3 py-3 w-full rounded-md hover:bg-error/10 text-error transition-colors font-medium">
             <LogOut className="w-5 h-5" />
             <span>Sign Out</span>
           </button>
@@ -95,7 +95,7 @@ export default async function DashboardLayout({
             </div>
           </Link>
           <form action={signOut}>
-            <button className="text-[var(--color-error)] p-2 rounded-full hover:bg-[var(--color-error)]/10 transition-colors" aria-label="Sign out">
+            <button className="text-error p-2 rounded-full hover:bg-error/10 transition-colors" aria-label="Sign out">
               <LogOut className="w-5 h-5" />
             </button>
           </form>

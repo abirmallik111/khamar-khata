@@ -113,27 +113,27 @@ export function AddExpenseForm({
       </header>
 
       {error && (
-        <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] rounded-md text-sm font-medium">
+        <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
           {error}
         </div>
       )}
 
       {showAddCategory && (
-        <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 flex flex-col gap-4 border border-[var(--color-primary)]/20">
+        <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 flex flex-col gap-4 border border-primary/20">
           <h3 className="font-bold text-lg">Create New Category</h3>
           <div className="flex gap-2">
             <input
               type="text"
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
-              className="flex-1 rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none"
+              className="flex-1 rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none"
               placeholder="e.g. Feed, Medicine"
             />
             <button
               type="button"
               onClick={handleAddCategory}
               disabled={isAddingCategory}
-              className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-md font-medium disabled:opacity-50"
+              className="bg-primary text-white px-4 py-2 rounded-md font-medium disabled:opacity-50"
             >
               Add
             </button>
@@ -151,12 +151,12 @@ export function AddExpenseForm({
                 Category *
               </label>
               {!showAddCategory && (
-                <button type="button" onClick={() => setShowAddCategory(true)} className="text-xs text-[var(--color-primary)] hover:underline flex items-center gap-1">
+                <button type="button" onClick={() => setShowAddCategory(true)} className="text-xs text-primary hover:underline flex items-center gap-1">
                   <Plus className="w-3 h-3" /> New Category
                 </button>
               )}
             </div>
-            <select required id="category_id" name="category_id" className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all appearance-none">
+            <select required id="category_id" name="category_id" className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none">
               {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
@@ -165,7 +165,7 @@ export function AddExpenseForm({
             <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="expense_date">
               Expense Date *
             </label>
-            <input required type="date" id="expense_date" name="expense_date" defaultValue={new Date().toISOString().split('T')[0]} className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all" />
+            <input required type="date" id="expense_date" name="expense_date" defaultValue={new Date().toISOString().split('T')[0]} className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all" />
           </div>
         </div>
 
@@ -182,7 +182,7 @@ export function AddExpenseForm({
             name="amount"
             value={totalAmount}
             onChange={(e) => setTotalAmount(e.target.value)}
-            className="rounded-md px-4 py-4 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-error)] outline-none transition-all font-display text-2xl font-bold text-[var(--color-error)]"
+            className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-error outline-none transition-all font-display text-2xl font-bold text-error"
             placeholder="0.00"
           />
         </div>
@@ -215,7 +215,7 @@ export function AddExpenseForm({
                     placeholder="0.00"
                     value={ownerContributions[owner.id] || ''}
                     onChange={(e) => handleContributionChange(owner.id, e.target.value)}
-                    className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-[var(--color-primary)] outline-none transition-all"
+                    className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-primary outline-none transition-all"
                   />
                 </div>
               </div>
@@ -240,20 +240,20 @@ export function AddExpenseForm({
           <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="note">
             Note (Optional)
           </label>
-          <input id="note" name="note" className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all" placeholder="e.g. Purchased 5 bags of feed" />
+          <input id="note" name="note" className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all" placeholder="e.g. Purchased 5 bags of feed" />
         </div>
 
         <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-(--color-surface-high)">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-(--color-on-surface-variant)">Apply to specific goats? (Optional)</label>
-            <span className="text-xs bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-2 py-1 rounded-md font-bold">{selectedGoats.size} Selected</span>
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-bold">{selectedGoats.size} Selected</span>
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
             {goats.map(goat => {
               const isSelected = selectedGoats.has(goat.id)
               return (
-                <button type="button" key={goat.id} onClick={() => toggleGoat(goat.id)} className={`px-3 py-2 text-sm rounded-md border text-left transition-all ${isSelected ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 font-bold text-[var(--color-primary)]' : 'border-(--color-surface-high) hover:border-[var(--color-primary)]/50'}`}>
+                <button type="button" key={goat.id} onClick={() => toggleGoat(goat.id)} className={`px-3 py-2 text-sm rounded-md border text-left transition-all ${isSelected ? 'border-primary bg-primary/10 font-bold text-primary' : 'border-(--color-surface-high) hover:border-primary/50'}`}>
                   {goat.name_or_tag}
                 </button>
               )
@@ -263,7 +263,7 @@ export function AddExpenseForm({
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
           <Link href="/dashboard/expenses" className="px-6 py-3 rounded-full font-semibold text-(--color-primary) hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <button type="submit" disabled={isSubmitting || categories.length === 0} className="bg-[var(--color-error)] text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <button type="submit" disabled={isSubmitting || categories.length === 0} className="bg-error text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
             {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
             {isSubmitting ? 'Saving...' : 'Save Expense'}
           </button>

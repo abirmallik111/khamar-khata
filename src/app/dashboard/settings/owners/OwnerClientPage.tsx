@@ -62,7 +62,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
       </header>
 
       {error && (
-        <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] rounded-md text-sm font-medium flex items-center gap-2">
+        <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium flex items-center gap-2">
           <ShieldAlert className="w-5 h-5" />
           {error}
         </div>
@@ -111,7 +111,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
             {owners.map(owner => (
               <li key={owner.id} className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:bg-(--color-surface-low) transition-colors group">
                 <div className="flex-1">
-                  <Link href={`/dashboard/settings/owners/${owner.id}`} className="font-bold text-xl text-(--color-on-background) hover:text-[var(--color-primary)] flex items-center gap-2">
+                  <Link href={`/dashboard/settings/owners/${owner.id}`} className="font-bold text-xl text-(--color-on-background) hover:text-primary flex items-center gap-2">
                     {owner.name}
                     <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
@@ -120,7 +120,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
                 <div className="flex items-center gap-4 w-full sm:w-auto border-t sm:border-none pt-4 sm:pt-0">
                   <Link 
                     href={`/dashboard/settings/owners/${owner.id}`}
-                    className="flex-1 sm:flex-none text-center px-4 py-2 text-sm font-bold rounded-md bg-(--color-surface-high) text-(--color-on-surface-variant) hover:bg-[var(--color-primary)] hover:text-white transition-all"
+                    className="flex-1 sm:flex-none text-center px-4 py-2 text-sm font-bold rounded-md bg-(--color-surface-high) text-(--color-on-surface-variant) hover:bg-primary hover:text-white transition-all"
                   >
                     View Ledger
                   </Link>
@@ -130,7 +130,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
                     )}
                     <button 
                       onClick={() => handleDelete(owner.id)}
-                      className={`p-3 rounded-full transition-all ${confirmingId === owner.id ? 'bg-red-500 text-white shadow-lg scale-110' : 'text-[var(--color-error)] hover:bg-[var(--color-error)]/10'}`}
+                      className={`p-3 rounded-full transition-all ${confirmingId === owner.id ? 'bg-red-500 text-white shadow-lg scale-110' : 'text-error hover:bg-error/10'}`}
                       title="Delete Partner"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -156,7 +156,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
                 required
                 id="name"
                 name="name"
-                className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+                className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
                 placeholder="e.g. Rahim Miah"
               />
             </div>
@@ -175,7 +175,7 @@ export function OwnerClientPage({ owners }: { owners: Owner[] }) {
                   id="share_percentage"
                   name="share_percentage"
                   defaultValue={remainingShare > 0 ? remainingShare : 0}
-                  className="w-full rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all font-mono"
+                  className="w-full rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all font-mono"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-(--color-on-surface-variant) font-bold">%</span>
               </div>

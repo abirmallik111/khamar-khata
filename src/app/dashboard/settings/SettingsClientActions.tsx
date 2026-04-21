@@ -53,7 +53,7 @@ export function SettingsClientActions() {
           onClick={toggleSimpleMode}
           aria-pressed={isSimpleMode}
           className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none flex-shrink-0 ${
-            isSimpleMode ? 'bg-[var(--color-primary)]' : 'bg-(--color-surface-high)'
+            isSimpleMode ? 'bg-primary' : 'bg-(--color-surface-high)'
           }`}
         >
           <span
@@ -65,7 +65,7 @@ export function SettingsClientActions() {
       </div>
 
       {isSimpleMode && (
-        <div className="p-3 bg-[var(--color-primary)]/10 text-[var(--color-primary)] rounded-md text-sm font-medium">
+        <div className="p-3 bg-primary/10 text-primary rounded-md text-sm font-medium">
           ✓ Simple Mode is ON — animations and blur effects are reduced.
         </div>
       )}

@@ -57,7 +57,7 @@ export function AuthForm({ message }: { message?: string }) {
             onClick={() => { setActiveTab('login'); setLocalError(null); }}
             className={`flex-1 py-5 font-bold transition-all ${
               activeTab === 'login'
-                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] bg-[var(--color-primary)]/5'
+                ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-(--color-on-surface-variant) hover:bg-(--color-surface-high)/30'
             }`}
           >
@@ -67,7 +67,7 @@ export function AuthForm({ message }: { message?: string }) {
             onClick={() => { setActiveTab('register'); setLocalError(null); }}
             className={`flex-1 py-5 font-bold transition-all ${
               activeTab === 'register'
-                ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] bg-[var(--color-primary)]/5'
+                ? 'text-primary border-b-2 border-primary bg-primary/5'
                 : 'text-(--color-on-surface-variant) hover:bg-(--color-surface-high)/30'
             }`}
           >
@@ -79,11 +79,11 @@ export function AuthForm({ message }: { message?: string }) {
           {activeTab === 'register' && (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="name">
-                <User className="w-4 h-4 text-[var(--color-primary)]" />
+                <User className="w-4 h-4 text-primary" />
                 Full Name
               </label>
               <input
-                className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+                className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
                 name="name"
                 placeholder="Rahim Miah"
                 required
@@ -93,11 +93,11 @@ export function AuthForm({ message }: { message?: string }) {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="email">
-              <Mail className="w-4 h-4 text-[var(--color-primary)]" />
+              <Mail className="w-4 h-4 text-primary" />
               Email Address
             </label>
             <input
-              className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+              className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
               type="email"
               name="email"
               placeholder="farmer@example.com"
@@ -107,11 +107,11 @@ export function AuthForm({ message }: { message?: string }) {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="password">
-              <Lock className="w-4 h-4 text-[var(--color-primary)]" />
+              <Lock className="w-4 h-4 text-primary" />
               Password
             </label>
             <input
-              className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+              className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
               type="password"
               name="password"
               placeholder="••••••••"
@@ -122,11 +122,11 @@ export function AuthForm({ message }: { message?: string }) {
           {activeTab === 'register' && (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="confirm_password">
-                <ShieldCheck className="w-4 h-4 text-[var(--color-primary)]" />
+                <ShieldCheck className="w-4 h-4 text-primary" />
                 Confirm Password
               </label>
               <input
-                className="rounded-xl px-4 py-4 bg-[var(--color-surface-high)]/50 border-2 border-transparent focus:border-[var(--color-primary)] focus:bg-white outline-none transition-all shadow-inner"
+                className="rounded-xl px-4 py-4 bg-surface-high/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
                 type="password"
                 name="confirm_password"
                 placeholder="••••••••"
@@ -136,7 +136,7 @@ export function AuthForm({ message }: { message?: string }) {
           )}
 
           {(localError || message) && (
-            <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] text-center rounded-xl font-medium border border-[var(--color-error)]/20 animate-shake">
+            <div className="p-4 bg-error/10 text-error text-center rounded-xl font-medium border border-error/20 animate-shake">
               {localError || message}
             </div>
           )}
@@ -144,7 +144,7 @@ export function AuthForm({ message }: { message?: string }) {
           <button
             type="submit"
             disabled={isPending}
-            className="mt-4 bg-gradient-primary rounded-2xl py-4 text-(--color-on-primary) font-black text-lg shadow-lg hover:shadow-[var(--color-primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            className="mt-4 bg-gradient-primary rounded-2xl py-4 text-(--color-on-primary) font-black text-lg shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
           >
             {isPending ? (
               <Loader2 className="w-6 h-6 animate-spin" />
@@ -156,7 +156,7 @@ export function AuthForm({ message }: { message?: string }) {
       </div>
       
       <p className="text-center mt-10 text-(--color-on-surface-variant) text-sm font-medium">
-        Secure authentication powered by <span className="text-[var(--color-primary)] font-bold">Supabase</span>
+        Secure authentication powered by <span className="text-primary font-bold">Supabase</span>
       </p>
     </div>
   )

@@ -21,7 +21,7 @@ export function SummaryCard({ title, value, subtitle, trend, icon: Icon, colorCl
           <Icon className="w-6 h-6" />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-sm font-bold ${trend.positive ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]'}`}>
+          <div className={`flex items-center gap-1 text-sm font-bold ${trend.positive ? 'text-primary' : 'text-error'}`}>
             {trend.positive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             {trend.value}
           </div>

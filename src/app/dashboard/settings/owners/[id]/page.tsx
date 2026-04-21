@@ -107,14 +107,14 @@ export default async function OwnerProfilePage(props: { params: Promise<{ id: st
       <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-4">
         <div className="flex justify-between items-end">
           <h2 className="font-bold text-lg flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-[var(--color-primary)]" />
+            <Wallet className="w-5 h-5 text-primary" />
             Contribution Progress
           </h2>
           <span className="text-sm font-bold text-(--color-on-surface-variant)">{paidPercentage.toFixed(1)}% of goal</span>
         </div>
         <div className="w-full h-4 bg-(--color-surface-high) rounded-full overflow-hidden">
           <div 
-            className={`h-full transition-all duration-1000 ${isOverpaid ? 'bg-purple-500' : 'bg-[var(--color-primary)]'}`}
+            className={`h-full transition-all duration-1000 ${isOverpaid ? 'bg-purple-500' : 'bg-primary'}`}
             style={{ width: `${Math.min(paidPercentage, 100)}%` }}
           ></div>
         </div>

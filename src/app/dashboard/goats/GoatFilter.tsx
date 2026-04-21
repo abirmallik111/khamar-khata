@@ -46,8 +46,8 @@ export function GoatFilter() {
             disabled={isPending}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border ${
               isActive
-                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm'
-                : 'bg-(--color-surface-lowest) text-(--color-on-surface-variant) border-(--color-surface-high) hover:border-[var(--color-primary)]/50'
+                ? 'bg-primary text-white border-primary shadow-sm'
+                : 'bg-(--color-surface-lowest) text-(--color-on-surface-variant) border-(--color-surface-high) hover:border-primary/50'
             } ${isPending ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {status.label}

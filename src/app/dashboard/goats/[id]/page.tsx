@@ -87,13 +87,13 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           <div>
             <h1 className="text-2xl font-bold tracking-tight font-display mb-1">{goat.name_or_tag}</h1>
             <p className="text-(--color-on-surface-variant) text-sm uppercase tracking-wider font-semibold">
-              Status: <span className={goat.status === 'active' ? 'text-[var(--color-primary)]' : goat.status === 'sold' ? 'text-blue-500' : 'text-[var(--color-error)]'}>{goat.status}</span>
+              Status: <span className={goat.status === 'active' ? 'text-primary' : goat.status === 'sold' ? 'text-blue-500' : 'text-error'}>{goat.status}</span>
             </p>
           </div>
         </div>
         <Link 
           href={`/dashboard/goats/${goat.id}/edit`}
-          className="bg-(--color-surface-lowest) border border-[var(--color-primary)] text-[var(--color-primary)] px-4 py-2 rounded-full text-sm font-semibold hover:bg-[var(--color-primary)] hover:text-white transition-all shadow-sm"
+          className="bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full text-sm font-semibold hover:bg-primary hover:text-white transition-all shadow-sm"
         >
           Edit Profile
         </Link>
@@ -143,9 +143,9 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
         <div className="flex flex-col gap-6 md:col-span-2">
           
           {/* ROI Card */}
-          <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient border-t-4 border-[var(--color-primary)]">
+          <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient border-t-4 border-primary">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[var(--color-primary)]" />
+              <TrendingUp className="w-5 h-5 text-primary" />
               Return on Investment
             </h2>
             
@@ -171,14 +171,14 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
             <div className="p-4 rounded-md bg-(--color-surface-high) flex justify-between items-center">
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Net Profit / Loss</p>
-                <p className={`text-3xl font-bold font-display ${isSold ? (profit >= 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]') : 'text-(--color-on-background)'}`}>
+                <p className={`text-3xl font-bold font-display ${isSold ? (profit >= 0 ? 'text-primary' : 'text-error') : 'text-(--color-on-background)'}`}>
                   {isSold ? (profit >= 0 ? '+' : '') + formatCurrency(profit, currencyCode) : 'Pending Sale'}
                 </p>
               </div>
               {isSold && (
                 <div className="text-right">
                   <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">ROI Margin</p>
-                  <p className={`text-xl font-bold ${profit >= 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]'}`}>
+                  <p className={`text-xl font-bold ${profit >= 0 ? 'text-primary' : 'text-error'}`}>
                     {roi}%
                   </p>
                 </div>
@@ -206,7 +206,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               <div className="relative border-l-2 border-(--color-surface-high) ml-3 flex flex-col gap-6 pb-4">
                 {mappedExpenses.map((exp, idx) => (
                   <div key={idx} className="relative pl-6">
-                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-[var(--color-error)] border-4 border-(--color-surface-lowest)"></div>
+                    <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-error border-4 border-(--color-surface-lowest)"></div>
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
                       <div>
                         <p className="font-bold">{exp.category}</p>
@@ -214,7 +214,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
                         {exp.note && <p className="text-sm text-(--color-on-surface-variant) mt-1">{exp.note}</p>}
                       </div>
                       <div className="text-left sm:text-right mt-2 sm:mt-0">
-                        <p className="font-bold text-[var(--color-error)]">-{formatCurrency(exp.allocatedCost, currencyCode)}</p>
+                        <p className="font-bold text-error">-{formatCurrency(exp.allocatedCost, currencyCode)}</p>
                         {exp.mapCount > 1 && (
                           <p className="text-xs text-(--color-on-surface-variant)">
                             (Shared 1/{exp.mapCount} of {formatCurrency(exp.totalAmount, currencyCode)})

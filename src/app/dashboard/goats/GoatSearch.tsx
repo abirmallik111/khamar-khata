@@ -23,8 +23,8 @@ export function GoatSearch() {
   }
 
   return (
-    <div className="flex-1 flex items-center gap-2 px-3 bg-(--color-surface-high) rounded-md transition-all focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20">
-      <Search className={`w-5 h-5 ${isPending ? 'text-[var(--color-primary)] animate-pulse' : 'text-(--color-on-surface-variant)'}`} />
+    <div className="flex-1 flex items-center gap-2 px-3 bg-(--color-surface-high) rounded-md transition-all focus-within:ring-2 focus-within:ring-primary/20">
+      <Search className={`w-5 h-5 ${isPending ? 'text-primary animate-pulse' : 'text-(--color-on-surface-variant)'}`} />
       <input 
         type="text" 
         placeholder="Search by tag or name..." 

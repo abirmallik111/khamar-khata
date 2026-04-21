@@ -35,14 +35,14 @@ export default async function ExpensesPage() {
         </div>
         <Link 
           href="/dashboard/expenses/add" 
-          className="bg-[var(--color-error)] text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-ambient hover:opacity-90 transition-opacity"
+          className="bg-error text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 shadow-ambient hover:opacity-90 transition-opacity"
         >
           <PlusCircle className="w-5 h-5" />
           Add Expense
         </Link>
       </header>
 
-      {error && <div className="text-[var(--color-error)] p-4 bg-[var(--color-error)]/10 rounded-md">Failed to load expenses.</div>}
+      {error && <div className="text-error p-4 bg-error/10 rounded-md">Failed to load expenses.</div>}
       
       {!error && expenses?.length === 0 ? (
         <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-12 text-center text-(--color-on-surface-variant) mt-4">
@@ -55,7 +55,7 @@ export default async function ExpensesPage() {
             return (
             <div 
               key={expense.id} 
-              className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col sm:flex-row border-l-4 border-l-[var(--color-error)]"
+              className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col sm:flex-row border-l-4 border-l-error"
             >
               <div className="p-4 sm:p-6 flex-1 flex flex-col gap-1">
                 <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ export default async function ExpensesPage() {
                   <p className="text-(--color-on-surface-variant) text-sm mt-2 italic">{expense.note}</p>
                 )}
                 {expense.expense_goat_map && ((expense.expense_goat_map[0] as { count: number } | undefined)?.count ?? 0) > 0 && (
-                  <div className="text-xs text-[var(--color-primary)] font-bold mt-2 uppercase tracking-tight">
+                  <div className="text-xs text-primary font-bold mt-2 uppercase tracking-tight">
                     Applied to {(expense.expense_goat_map[0] as { count: number }).count} goat(s)
                   </div>
                 )}
@@ -85,7 +85,7 @@ export default async function ExpensesPage() {
               
               <div className="bg-(--color-surface-low)/50 sm:w-64 p-4 sm:p-6 flex flex-col justify-center items-end gap-3 sm:border-l border-(--color-surface-high)">
                 <div className="text-right">
-                  <p className="text-2xl font-display font-bold text-[var(--color-error)]">
+                  <p className="text-2xl font-display font-bold text-error">
                     {formatCurrency(expense.amount, currencyCode)}
                   </p>
                   {expense.due_amount > 0 && (
@@ -108,7 +108,7 @@ export default async function ExpensesPage() {
                   )}
                   <Link 
                     href={`/dashboard/expenses/${expense.id}/edit`}
-                    className="flex-1 sm:flex-none p-2 rounded-md bg-(--color-surface-high) text-(--color-on-surface-variant) hover:bg-[var(--color-primary)] hover:text-white transition-all shadow-sm"
+                    className="flex-1 sm:flex-none p-2 rounded-md bg-(--color-surface-high) text-(--color-on-surface-variant) hover:bg-primary hover:text-white transition-all shadow-sm"
                     title="Edit Expense"
                   >
                     <Edit3 className="w-5 h-5" />

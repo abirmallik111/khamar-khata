@@ -16,14 +16,14 @@ export function EmptyState() {
       <div className="flex flex-col sm:flex-row gap-4 mt-4">
         <Link 
           href="/dashboard/goats/add" 
-          className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-6 py-3 rounded-full font-bold shadow-sm hover:brightness-110 transition-all"
+          className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-bold shadow-sm hover:brightness-110 transition-all"
         >
           <PlusCircle className="w-5 h-5" />
           Add Your First Goat
         </Link>
         <Link 
           href="/dashboard/sales" 
-          className="flex items-center gap-2 bg-(--color-surface-lowest) border border-[var(--color-primary)] text-[var(--color-primary)] px-6 py-3 rounded-full font-bold hover:bg-[var(--color-primary)] hover:text-white transition-all shadow-sm"
+          className="flex items-center gap-2 bg-(--color-surface-lowest) border border-primary text-primary px-6 py-3 rounded-full font-bold hover:bg-primary hover:text-white transition-all shadow-sm"
         >
           <TrendingUp className="w-5 h-5" />
           Record a Sale

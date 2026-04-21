@@ -57,7 +57,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
       <form onSubmit={handleSubmit} className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 sm:p-8 flex flex-col gap-6">
         
         {error && (
-          <div className="p-4 bg-[var(--color-error)]/10 text-[var(--color-error)] rounded-md text-sm font-medium">
+          <div className="p-4 bg-error/10 text-error rounded-md text-sm font-medium">
             {error}
           </div>
         )}
@@ -72,7 +72,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
             name="goat_id"
             value={selectedGoatId}
             onChange={(e) => setSelectedGoatId(e.target.value)}
-            className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all appearance-none"
+            className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
           >
             <option value="" disabled>Choose a goat...</option>
             {goats.map(goat => (
@@ -80,7 +80,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
             ))}
           </select>
           {goats.length === 0 && (
-            <span className="text-xs text-[var(--color-error)] mt-1">No active goats available to sell.</span>
+            <span className="text-xs text-error mt-1">No active goats available to sell.</span>
           )}
         </div>
 
@@ -98,7 +98,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
               name="sale_price"
               value={salePrice}
               onChange={(e) => setSalePrice(e.target.value)}
-              className="rounded-md px-4 py-4 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all font-display text-2xl font-bold text-[var(--color-primary)]"
+              className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all font-display text-2xl font-bold text-primary"
               placeholder="0.00"
             />
           </div>
@@ -113,13 +113,13 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
               id="sale_date"
               name="sale_date"
               defaultValue={new Date().toISOString().split('T')[0]}
-              className="rounded-md px-4 py-4 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+              className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
             />
           </div>
         </div>
 
         {selectedGoat && salePrice && !isNaN(parseFloat(salePrice)) && (
-          <div className={`p-4 rounded-md border ${projectedProfit >= 0 ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5' : 'border-[var(--color-error)] bg-[var(--color-error)]/5'}`}>
+          <div className={`p-4 rounded-md border ${projectedProfit >= 0 ? 'border-primary bg-primary/5' : 'border-error bg-error/5'}`}>
             <h4 className="text-sm font-medium text-(--color-on-surface-variant) mb-2">Projected Profit / Loss</h4>
             <div className="flex justify-between items-center">
               <div className="flex flex-col">
@@ -127,16 +127,16 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
                 <span className="text-xs text-(--color-on-surface-variant)">Purchase Cost: {formatCurrency(selectedGoat.purchase_price)}</span>
               </div>
               <div className="flex flex-col items-end">
-                <span className={`text-xl font-bold font-display ${projectedProfit >= 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]'}`}>
+                <span className={`text-xl font-bold font-display ${projectedProfit >= 0 ? 'text-primary' : 'text-error'}`}>
                   {projectedProfit >= 0 ? '+' : ''}{formatCurrency(projectedProfit)}
                 </span>
-                <span className={`text-xs font-bold ${projectedProfit >= 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-error)]'}`}>
+                <span className={`text-xs font-bold ${projectedProfit >= 0 ? 'text-primary' : 'text-error'}`}>
                   Margin: {profitMargin.toFixed(1)}%
                 </span>
               </div>
             </div>
             {projectedProfit < 0 && (
-              <p className="text-xs text-[var(--color-error)] mt-2 italic">Warning: You are selling this goat at a loss.</p>
+              <p className="text-xs text-error mt-2 italic">Warning: You are selling this goat at a loss.</p>
             )}
           </div>
         )}
@@ -148,7 +148,7 @@ export function AddSaleForm({ goats }: { goats: Goat[] }) {
           <input
             id="note"
             name="note"
-            className="rounded-md px-4 py-3 bg-[var(--color-surface-high)] border-b-2 border-transparent focus:border-[var(--color-primary)] outline-none transition-all"
+            className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
             placeholder="e.g. Sold to local butcher"
           />
         </div>

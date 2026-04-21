@@ -140,7 +140,7 @@ export function ReportsUI({ initialData }: ReportsUIProps) {
                 <button
                   key={range.id}
                   onClick={() => handleRangeChange(range.id)}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-(--color-surface-low) transition-colors ${currentRange === range.id ? 'font-bold text-[var(--color-primary)] bg-(--color-surface-low)' : ''}`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-(--color-surface-low) transition-colors ${currentRange === range.id ? 'font-bold text-primary bg-(--color-surface-low)' : ''}`}
                 >
                   {range.label}
                 </button>
@@ -151,7 +151,7 @@ export function ReportsUI({ initialData }: ReportsUIProps) {
 
         <button 
           onClick={handlePrint}
-          className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-5 py-2 rounded-md font-bold shadow-sm hover:brightness-110 transition-all text-sm"
+          className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-md font-bold shadow-sm hover:brightness-110 transition-all text-sm"
         >
           <Printer className="w-4 h-4" />
           Export PDF

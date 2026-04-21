@@ -64,7 +64,7 @@ export default async function GoatsPage(props: {
       </div>
 
       {/* Goats Grid */}
-      {error && <div className="text-[var(--color-error)] p-4 bg-[var(--color-error)]/10 rounded-md">Failed to load goats: {error.message}</div>}
+      {error && <div className="text-error p-4 bg-error/10 rounded-md">Failed to load goats: {error.message}</div>}
       
       {!error && goats?.length === 0 ? (
         <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-12 text-center flex flex-col items-center gap-4 mt-4">
@@ -76,7 +76,7 @@ export default async function GoatsPage(props: {
             <p className="text-(--color-on-surface-variant) text-sm">Try adjusting your search or filters, or add a new goat.</p>
           </div>
           {(searchParams.q || searchParams.status) && (
-             <Link href="/dashboard/goats" className="text-[var(--color-primary)] font-semibold hover:underline text-sm">
+             <Link href="/dashboard/goats" className="text-primary font-semibold hover:underline text-sm">
                Clear all filters
              </Link>
           )}
@@ -84,7 +84,7 @@ export default async function GoatsPage(props: {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
           {goats?.map((goat) => (
-            <Link href={`/dashboard/goats/${goat.id}`} key={goat.id} className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden hover:shadow-lg transition-shadow group flex flex-col border border-transparent hover:border-[var(--color-primary)]/20">
+            <Link href={`/dashboard/goats/${goat.id}`} key={goat.id} className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden hover:shadow-lg transition-shadow group flex flex-col border border-transparent hover:border-primary/20">
               <div className="aspect-[4/3] bg-(--color-surface-high) relative overflow-hidden">
                 {goat.image_url ? (
                   <Image 
@@ -100,7 +100,7 @@ export default async function GoatsPage(props: {
                   </div>
                 )}
                 <div className={`absolute top-2 right-2 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase shadow-sm border ${
-                  goat.status === 'active' ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)] border-[var(--color-primary)]/20' :
+                  goat.status === 'active' ? 'bg-primary/10 text-primary border-primary/20' :
                   goat.status === 'sold' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
                   goat.status === 'sick' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
                   'bg-red-500/10 text-red-500 border-red-500/20'

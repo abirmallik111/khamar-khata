@@ -31,7 +31,7 @@ export function TopPerformingLivestock({ data }: { data: GoatROI[] }) {
           const isSilver = (goat.roi_percentage || 0) >= 50 && (goat.roi_percentage || 0) < 100;
 
           return (
-            <div key={goat.id} className="bg-(--color-surface-lowest) p-4 rounded-md shadow-ambient flex items-center justify-between gap-4 border-l-4 border-transparent hover:border-[var(--color-primary)] transition-all">
+            <div key={goat.id} className="bg-(--color-surface-lowest) p-4 rounded-md shadow-ambient flex items-center justify-between gap-4 border-l-4 border-transparent hover:border-primary transition-all">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-(--color-surface-high) overflow-hidden flex-shrink-0 border border-(--color-surface-high)">
                   {goat.image_url ? (
@@ -49,7 +49,7 @@ export function TopPerformingLivestock({ data }: { data: GoatROI[] }) {
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end gap-1 mb-1">
-                  <span className={`text-lg font-bold ${isGold ? 'text-[var(--color-primary)]' : isSilver ? 'text-blue-500' : 'text-orange-500'}`}>
+                  <span className={`text-lg font-bold ${isGold ? 'text-primary' : isSilver ? 'text-blue-500' : 'text-orange-500'}`}>
                     {goat.roi_percentage?.toFixed(0)}% ROI
                   </span>
                 </div>
