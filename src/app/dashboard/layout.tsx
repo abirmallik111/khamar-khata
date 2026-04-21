@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Home, List, PlusCircle, LogOut, Settings, TrendingUp, BarChart3 } from 'lucide-react'
+import { NavLink } from '@/components/NavLink'
 
 export default async function DashboardLayout({
   children,
@@ -56,15 +57,12 @@ export default async function DashboardLayout({
         </Link>
 
         <nav className="flex-1 flex flex-col gap-1">
-          {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-3 px-3 py-3 rounded-md hover:bg-(--color-surface-low) transition-colors text-(--color-on-surface-variant) font-medium"
-            >
-              <Icon className="w-5 h-5" />
-              <span>{label}</span>
-            </Link>
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.href}
+              {...link}
+              variant="desktop"
+            />
           ))}
         </nav>
 
@@ -109,15 +107,12 @@ export default async function DashboardLayout({
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden glass-panel fixed bottom-0 w-full z-50 border-t border-(--color-surface-high)">
         <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
-          {navLinks.map(({ href, label, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-md text-(--color-on-surface-variant) hover:text-(--color-primary) transition-colors min-w-[56px]"
-            >
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-semibold">{label}</span>
-            </Link>
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.href}
+              {...link}
+              variant="mobile"
+            />
           ))}
         </div>
       </nav>
