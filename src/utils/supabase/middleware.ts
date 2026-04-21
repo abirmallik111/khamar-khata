@@ -34,14 +34,14 @@ export async function updateSession(request: NextRequest) {
   // protected routes
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
   
-  if (!user && !isAuthRoute && request.nextUrl.pathname !== '/') {
+  if (!user && !isAuthRoute) {
     // redirect to login if not authenticated
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
+  if (user && (isAuthRoute || request.nextUrl.pathname === '/')) {
     // redirect to dashboard if already authenticated
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
