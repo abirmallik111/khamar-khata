@@ -16,6 +16,10 @@ const publicSans = Public_Sans({
 export const metadata: Metadata = {
   title: "Khamar Khata Farm Manager",
   description: "Modern, simple, and reliable farm management SaaS.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
