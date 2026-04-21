@@ -8,8 +8,8 @@ export default async function ReportsPage(props: {
   const searchParams = await props.searchParams;
   const supabase = await createClient()
 
-  const startDate = searchParams.start || null
-  const endDate = searchParams.end || null
+  const startDate = searchParams.start || undefined
+  const endDate = searchParams.end || undefined
 
   const { data, error } = await supabase.rpc('get_farm_reports', {
      p_start_date: startDate,

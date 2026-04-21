@@ -45,8 +45,7 @@ export async function addGoat(formData: FormData) {
     imageUrl = publicUrlData.publicUrl
   }
 
-  // @ts-ignore - Custom RPC function not yet in generated types
-  const { error: insertError } = await supabase.rpc('add_goat_with_contributions', {
+  const { error: insertError } = await (supabase as any).rpc('add_goat_with_contributions', {
     p_user_id: user.id,
     p_name_or_tag: nameOrTag,
     p_breed: breed || null,
@@ -114,8 +113,7 @@ export async function updateGoat(id: string, formData: FormData) {
   const contributionsJson = formData.get('owner_contributions') as string
   const contributions = contributionsJson ? JSON.parse(contributionsJson) : []
 
-  // @ts-ignore - Custom RPC function not yet in generated types
-  const { error: updateError } = await supabase.rpc('update_goat_with_contributions', {
+  const { error: updateError } = await (supabase as any).rpc('update_goat_with_contributions', {
     p_goat_id: id,
     p_user_id: user.id,
     p_name_or_tag: updateData.name_or_tag,

@@ -20,7 +20,7 @@ export async function addSale(formData: FormData) {
     p_goat_id: goatId,
     p_sale_price: salePrice,
     p_sale_date: saleDate,
-    p_note: note || null
+    p_note: note || ''
   })
 
   if (error) {
