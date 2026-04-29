@@ -21,8 +21,12 @@ export default async function GoatsPage(props: {
     query = query.ilike('name_or_tag', `%${searchParams.q}%`)
   }
 
-  if (searchParams.status && searchParams.status !== 'all') {
-    query = query.eq('status', searchParams.status as any)
+  const currentStatus = searchParams.status || 'current'
+
+  if (currentStatus === 'current') {
+    query = query.in('status', ['active', 'sick'])
+  } else if (currentStatus !== 'all') {
+    query = query.eq('status', currentStatus as any)
   }
 
   const { data: goats, error } = await query

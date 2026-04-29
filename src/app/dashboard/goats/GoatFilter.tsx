@@ -4,15 +4,16 @@ import { GoatStatus } from '@/types'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition } from 'react'
 
-type FilterStatus = GoatStatus | 'all'
+type FilterStatus = GoatStatus | 'all' | 'current'
 
 const statuses: { label: string; value: FilterStatus }[] = [
-  { label: 'All', value: 'all' },
+  { label: 'Current', value: 'current' },
   { label: 'Active', value: 'active' },
   { label: 'Sold', value: 'sold' },
   { label: 'Sick', value: 'sick' },
   { label: 'Dead', value: 'dead' },
   { label: 'Archived', value: 'archived' },
+  { label: 'All', value: 'all' },
 ]
 
 export function GoatFilter() {
@@ -20,11 +21,11 @@ export function GoatFilter() {
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   
-  const currentStatus = (searchParams.get('status') as FilterStatus) || 'all'
+  const currentStatus = (searchParams.get('status') as FilterStatus) || 'current'
 
   const handleStatusChange = (status: FilterStatus) => {
     const params = new URLSearchParams(searchParams)
-    if (status !== 'all') {
+    if (status !== 'current') {
       params.set('status', status)
     } else {
       params.delete('status')
