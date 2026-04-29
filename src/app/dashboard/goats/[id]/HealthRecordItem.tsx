@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Calendar, MoreVertical, Pencil, Trash, Loader2 } from 'lucide-react'
-import { deleteHealthRecord } from './actions' // wait, actions are in ../actions
+import { deleteHealthRecord } from '../actions'
 import { HealthRecordModal } from './HealthRecordModal'
 import { formatDate } from '@/utils/format'
 
