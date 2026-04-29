@@ -99,11 +99,12 @@ export default async function GoatsPage(props: {
                     No Image
                   </div>
                 )}
-                <div className={`absolute top-2 right-2 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold uppercase shadow-sm border ${
-                  goat.status === 'active' ? 'bg-primary/10 text-primary border-primary/20' :
-                  goat.status === 'sold' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                  goat.status === 'sick' ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20' :
-                  'bg-red-500/10 text-red-500 border-red-500/20'
+                <div className={`absolute top-5 -right-10 w-40 rotate-45 text-center text-[10px] font-bold uppercase shadow-md py-1.5 text-white z-10 ${
+                  goat.status === 'active' ? 'bg-green-600' :
+                  goat.status === 'sold' ? 'bg-blue-600' :
+                  goat.status === 'sick' ? 'bg-amber-500' :
+                  goat.status === 'archived' ? 'bg-gray-600' :
+                  'bg-red-600'
                 }`}>
                   {goat.status}
                 </div>
