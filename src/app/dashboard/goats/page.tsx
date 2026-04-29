@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { PlusCircle } from 'lucide-react'
 import { GoatSearch } from './GoatSearch'
 import { GoatFilter } from './GoatFilter'
-import { formatCurrency } from '@/utils/format'
+import { formatCurrency, formatDate } from '@/utils/format'
 
 export default async function GoatsPage(props: {
   searchParams: Promise<{ q?: string; status?: string }>
@@ -120,7 +120,10 @@ export default async function GoatsPage(props: {
                     {goat.gender}
                   </span>
                 </div>
-                <p className="text-xs text-(--color-on-surface-variant)">{goat.breed || 'Unknown breed'}</p>
+                <div className="flex justify-between items-center text-xs text-(--color-on-surface-variant)">
+                  <p>{goat.breed || 'Unknown breed'}</p>
+                  <p>{formatDate(goat.purchase_date)}</p>
+                </div>
                 <div className="mt-3 pt-3 border-t border-(--color-surface-high) flex justify-between items-center">
                   <span className="text-[10px] text-(--color-on-surface-variant) uppercase tracking-widest font-bold">Cost</span>
                   <span className="font-bold text-(--color-on-background)">{formatCurrency(goat.purchase_price, currencyCode)}</span>

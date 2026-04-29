@@ -150,4 +150,125 @@ export async function deleteGoat(id: string) {
   }
 
   revalidatePath('/dashboard/goats')
+  redirect('/dashboard/goats')
+}
+
+export async function addHealthRecord(goatId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const recordType = formData.get('record_type') as string
+  const recordDate = formData.get('record_date') as string
+  const name = formData.get('name') as string || null
+  const notes = formData.get('notes') as string || null
+  const nextDate = formData.get('next_date') as string || null
+
+  const { error } = await supabase.from('goat_health_records').insert({
+    user_id: user.id,
+    goat_id: goatId,
+    record_type: recordType,
+    record_date: recordDate,
+    name,
+    notes,
+    next_date: nextDate
+  })
+
+  if (error) {
+    console.error('Error adding health record:', error)
+    throw new Error('Failed to add health record: ' + error.message)
+  }
+
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function addGoatNote(goatId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const note = formData.get('note') as string
+  const noteDate = formData.get('note_date') as string
+  
+  if (!note || note.trim() === '') {
+    throw new Error('Note content cannot be empty')
+  }
+
+  const { error } = await supabase.from('goat_notes').insert({
+    user_id: user.id,
+    goat_id: goatId,
+    note: note.trim(),
+    note_date: noteDate
+  })
+
+  if (error) {
+    console.error('Error adding goat note:', error)
+    throw new Error('Failed to add note: ' + error.message)
+  }
+
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function deleteHealthRecord(id: string, goatId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase.from('goat_health_records').delete().eq('id', id).eq('user_id', user.id)
+  
+  if (error) throw new Error('Failed to delete health record')
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function editHealthRecord(id: string, goatId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const recordType = formData.get('record_type') as string
+  const recordDate = formData.get('record_date') as string
+  const name = formData.get('name') as string || null
+  const notes = formData.get('notes') as string || null
+  const nextDate = formData.get('next_date') as string || null
+
+  const { error } = await supabase.from('goat_health_records').update({
+    record_type: recordType,
+    record_date: recordDate,
+    name,
+    notes,
+    next_date: nextDate
+  }).eq('id', id).eq('user_id', user.id)
+
+  if (error) throw new Error('Failed to update health record')
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function deleteGoatNote(id: string, goatId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase.from('goat_notes').delete().eq('id', id).eq('user_id', user.id)
+  
+  if (error) throw new Error('Failed to delete note')
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function editGoatNote(id: string, goatId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const note = formData.get('note') as string
+  const noteDate = formData.get('note_date') as string
+  
+  if (!note || note.trim() === '') throw new Error('Note cannot be empty')
+
+  const { error } = await supabase.from('goat_notes').update({
+    note: note.trim(),
+    note_date: noteDate
+  }).eq('id', id).eq('user_id', user.id)
+
+  if (error) throw new Error('Failed to update note')
+  revalidatePath(`/dashboard/goats/${goatId}`)
 }

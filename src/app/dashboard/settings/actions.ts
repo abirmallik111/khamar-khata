@@ -20,7 +20,9 @@ export async function exportUserData() {
     'expenses',
     'expense_goat_map',
     'sales',
-    'owner_contributions'
+    'owner_contributions',
+    'goat_health_records',
+    'goat_notes'
   ]
 
   const results = await Promise.all(

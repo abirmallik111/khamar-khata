@@ -140,6 +140,85 @@ export type Database = {
           },
         ]
       }
+      goat_health_records: {
+        Row: {
+          created_at: string
+          goat_id: string
+          id: string
+          name: string | null
+          next_date: string | null
+          notes: string | null
+          record_date: string
+          record_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goat_id: string
+          id?: string
+          name?: string | null
+          next_date?: string | null
+          notes?: string | null
+          record_date: string
+          record_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goat_id?: string
+          id?: string
+          name?: string | null
+          next_date?: string | null
+          notes?: string | null
+          record_date?: string
+          record_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goat_health_records_goat_id_fkey"
+            columns: ["goat_id"]
+            isOneToOne: false
+            referencedRelation: "goats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goat_notes: {
+        Row: {
+          created_at: string
+          goat_id: string
+          id: string
+          note: string
+          note_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goat_id: string
+          id?: string
+          note: string
+          note_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goat_id?: string
+          id?: string
+          note?: string
+          note_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goat_notes_goat_id_fkey"
+            columns: ["goat_id"]
+            isOneToOne: false
+            referencedRelation: "goats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goats: {
         Row: {
           breed: string | null

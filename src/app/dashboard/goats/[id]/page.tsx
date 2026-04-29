@@ -1,7 +1,12 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, TrendingUp, AlertTriangle, FileText, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, TrendingUp, AlertTriangle, FileText, Image as ImageIcon, Activity, Syringe, StickyNote, Calendar } from 'lucide-react'
+import { HealthRecordModal } from './HealthRecordModal'
+import { NoteModal } from './NoteModal'
+import { HealthRecordItem } from './HealthRecordItem'
+import { NoteItem } from './NoteItem'
+import { DeleteGoatButton } from './DeleteGoatButton'
 import { notFound } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/utils/format'
 
@@ -14,7 +19,9 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
     .from('goats')
     .select(`
       *,
-      sales (sale_price, sale_date, note)
+      sales (sale_price, sale_date, note),
+      goat_health_records (*),
+      goat_notes (*)
     `)
     .eq('id', params.id)
     .single()
@@ -77,26 +84,41 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
   const profit = revenue - totalCost
   const roi = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(1) : 0
 
+  // Group health records
+  const healthRecords = (goat.goat_health_records || []) as any[]
+  // Sort records by date descending
+  healthRecords.sort((a, b) => new Date(b.record_date).getTime() - new Date(a.record_date).getTime())
+  
+  const vaccines = healthRecords.filter(r => r.record_type === 'vaccine')
+  const generalHealth = healthRecords.filter(r => r.record_type !== 'vaccine')
+
+  // Sort notes by date descending
+  const notes = (goat.goat_notes || []) as any[]
+  notes.sort((a, b) => new Date(b.note_date).getTime() - new Date(a.note_date).getTime())
+
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/goats" className="p-2 rounded-full hover:bg-(--color-surface-high) transition-colors text-(--color-on-surface-variant)">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-4 items-start">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 w-full">
+          <Link href="/dashboard/goats" className="mt-1 sm:mt-0 p-2 shrink-0 rounded-full hover:bg-(--color-surface-high) transition-colors text-(--color-on-surface-variant)">
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight font-display mb-1">{goat.name_or_tag}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display mb-1 truncate">{goat.name_or_tag}</h1>
             <p className="text-(--color-on-surface-variant) text-sm uppercase tracking-wider font-semibold">
               Status: <span className={goat.status === 'active' ? 'text-primary' : goat.status === 'sold' ? 'text-blue-500' : 'text-error'}>{goat.status}</span>
             </p>
           </div>
         </div>
-        <Link 
-          href={`/dashboard/goats/${goat.id}/edit`}
-          className="bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full text-sm font-semibold hover:bg-primary hover:text-white transition-all shadow-sm"
-        >
-          Edit Profile
-        </Link>
+        <div className="flex items-center gap-3 w-full sm:w-auto pl-12 sm:pl-0">
+          <Link 
+            href={`/dashboard/goats/${goat.id}/edit`}
+            className="flex-1 sm:flex-none text-center bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full text-sm font-semibold hover:bg-primary hover:text-white transition-all shadow-sm flex justify-center"
+          >
+            Edit Profile
+          </Link>
+          <DeleteGoatButton goatId={goat.id} className="flex-1 sm:flex-none" />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -149,7 +171,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               Return on Investment
             </h2>
             
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mb-6">
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium">Purchase</p>
                 <p className="font-bold">{formatCurrency(goat.purchase_price, currencyCode)}</p>
@@ -168,7 +190,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               </div>
             </div>
 
-            <div className="p-4 rounded-md bg-(--color-surface-high) flex justify-between items-center">
+            <div className="p-4 rounded-md bg-(--color-surface-high) flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Net Profit / Loss</p>
                 <p className={`text-3xl font-bold font-display ${isSold ? (profit >= 0 ? 'text-primary' : 'text-error') : 'text-(--color-on-background)'}`}>
@@ -227,7 +249,71 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               </div>
             )}
           </div>
+        </div>
+      </div>
 
+      {/* Health & Medical Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+        
+        {/* Vaccines */}
+        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-bold text-lg flex items-center gap-2">
+              <Syringe className="w-5 h-5 text-emerald-500" />
+              Vaccination Records
+            </h2>
+          </div>
+
+          {vaccines.length === 0 ? (
+            <p className="text-sm text-(--color-on-surface-variant) italic pb-4">No vaccination records found.</p>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+              {vaccines.map(record => (
+                <HealthRecordItem key={record.id} record={record} goatId={goat.id} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* General Health & Medicine */}
+        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-bold text-lg flex items-center gap-2">
+              <Activity className="w-5 h-5 text-amber-500" />
+              Health & Medicine
+            </h2>
+          </div>
+
+          {generalHealth.length === 0 ? (
+            <p className="text-sm text-(--color-on-surface-variant) italic pb-4">No health or medicine records found.</p>
+          ) : (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
+              {generalHealth.map(record => (
+                <HealthRecordItem key={record.id} record={record} goatId={goat.id} />
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div className="flex justify-center -mt-2 mb-2">
+         <HealthRecordModal goatId={goat.id} />
+      </div>
+
+      {/* Notes Section */}
+      <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient mb-8">
+        <h2 className="font-bold text-lg mb-6 flex items-center gap-2">
+          <StickyNote className="w-5 h-5 text-(--color-on-surface-variant)" />
+          Notes & Reminders
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <NoteModal goatId={goat.id} />
+          
+          {notes.map(note => (
+            <NoteItem key={note.id} note={note} goatId={goat.id} />
+          ))}
         </div>
       </div>
     </div>

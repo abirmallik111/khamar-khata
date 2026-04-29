@@ -76,7 +76,7 @@ export function formatNumberOnly(num: number): string {
  */
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-GB', {
-    day: 'numeric',
+    day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
