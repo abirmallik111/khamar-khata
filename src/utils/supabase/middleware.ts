@@ -36,7 +36,9 @@ export async function updateSession(request: NextRequest) {
   const isForgotPage = request.nextUrl.pathname.startsWith('/forgot-password')
   
   // routes that are accessible without being logged in
-  const isPublicRoute = isLoginPage || isForgotPage || request.nextUrl.pathname.startsWith('/reset-password')
+  const isPublicRoute = isLoginPage || isForgotPage || 
+    request.nextUrl.pathname.startsWith('/reset-password') ||
+    request.nextUrl.pathname.startsWith('/auth/callback')
   
   if (!user && !isPublicRoute) {
     // redirect to login if not authenticated and trying to access a private route
