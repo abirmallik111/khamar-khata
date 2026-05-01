@@ -7,7 +7,7 @@ import { useTransition } from 'react'
 type FilterStatus = GoatStatus | 'all' | 'current'
 
 const statuses: { label: string; value: FilterStatus }[] = [
-  { label: 'In Herd', value: 'current' },
+  { label: 'In Farm', value: 'current' },
   { label: 'Active', value: 'active' },
   { label: 'Sold', value: 'sold' },
   { label: 'Sick', value: 'sick' },
