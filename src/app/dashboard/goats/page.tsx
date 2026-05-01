@@ -24,8 +24,13 @@ export default async function GoatsPage(props: {
   const currentStatus = searchParams.status || 'current'
 
   if (currentStatus === 'current') {
+    // Show goats currently on the farm
     query = query.in('status', ['active', 'sick'])
+  } else if (currentStatus === 'archived') {
+    // Show all goats that are no longer on the farm (Sold, Dead, or manually Archived)
+    query = query.in('status', ['sold', 'dead', 'archived'])
   } else if (currentStatus !== 'all') {
+    // Show specific status if selected (e.g., just 'sold' or just 'dead')
     query = query.eq('status', currentStatus as any)
   }
 
