@@ -31,22 +31,24 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // protected routes
-  const isAuthRoute = 
-    request.nextUrl.pathname.startsWith('/login') || 
-    request.nextUrl.pathname.startsWith('/register') ||
-    request.nextUrl.pathname.startsWith('/forgot-password') ||
-    request.nextUrl.pathname.startsWith('/reset-password')
+  // routes that should redirect to dashboard if user is already logged in
+  const isLoginPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
+  const isForgotPage = request.nextUrl.pathname.startsWith('/forgot-password')
   
-  if (!user && !isAuthRoute) {
-    // redirect to login if not authenticated
+  // routes that are accessible without being logged in
+  const isPublicRoute = isLoginPage || isForgotPage || request.nextUrl.pathname.startsWith('/reset-password')
+  
+  if (!user && !isPublicRoute) {
+    // redirect to login if not authenticated and trying to access a private route
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && (isAuthRoute || request.nextUrl.pathname === '/')) {
-    // redirect to dashboard if already authenticated
+  if (user && (isLoginPage || isForgotPage || request.nextUrl.pathname === '/')) {
+    // redirect to dashboard if already authenticated and trying to access login/register/forgot
+    // we DON'T redirect away from /reset-password because the user needs to be "logged in" 
+    // via the recovery link to use that page.
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
