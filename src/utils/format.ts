@@ -53,6 +53,29 @@ export function formatAmount(amount: number): string {
 export function formatCompactNumber(num: number, currencyCode: CurrencyCode = 'BDT'): string {
   const locale = currencyLocaleMap[currencyCode] || 'en-US'
 
+  // Special handling for BDT to use 'K' instead of Bengali suffixes
+  if (currencyCode === 'BDT') {
+    const absNum = Math.abs(num)
+    const sign = num < 0 ? '-' : ''
+    let value = ''
+    let suffix = ''
+
+    if (absNum >= 1000000) {
+      value = (absNum / 1000000).toFixed(1)
+      suffix = 'M'
+    } else if (absNum >= 1000) {
+      value = (absNum / 1000).toFixed(1)
+      suffix = 'K'
+    } else {
+      value = absNum.toString()
+    }
+
+    // Remove .0 if it exists
+    if (value.endsWith('.0')) value = value.slice(0, -2)
+    
+    return `${sign}${value}${suffix}৳`
+  }
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
