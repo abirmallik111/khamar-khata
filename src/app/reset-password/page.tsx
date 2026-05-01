@@ -6,8 +6,11 @@ import { Lock, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { resetPassword } from '../login/actions'
 import { SubmitButton } from '@/components/SubmitButton'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 export default function ResetPasswordPage() {
+  const searchParams = useSearchParams()
+  const code = searchParams.get('code')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
@@ -71,6 +74,7 @@ export default function ResetPasswordPage() {
             </div>
           ) : (
             <form action={handleAction} className="p-8 flex flex-col gap-6">
+              <input type="hidden" name="code" value={code || ''} />
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="password">
                   <Lock className="w-4 h-4 text-primary" />

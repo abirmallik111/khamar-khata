@@ -65,6 +65,15 @@ export async function forgotPassword(formData: FormData) {
 export async function resetPassword(formData: FormData) {
   const supabase = await createClient()
   const password = formData.get('password') as string
+  const code = formData.get('code') as string
+
+  // If we have a code, exchange it for a session first
+  if (code) {
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    if (exchangeError) {
+      return { error: exchangeError.message }
+    }
+  }
 
   const { error } = await supabase.auth.updateUser({
     password: password,
