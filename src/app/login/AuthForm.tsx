@@ -149,12 +149,12 @@ export function AuthForm({ message }: { message?: string }) {
 
         {activeTab === 'login' && (
           <div className="px-8 pb-8 text-center">
-            <Link 
+            <a 
               href="/forgot-password" 
-              className="text-sm font-bold text-primary hover:underline transition-all inline-block"
+              className="text-sm font-bold text-primary hover:underline transition-all inline-block py-2 px-4"
             >
               Forgot Password?
-            </Link>
+            </a>
           </div>
         )}
       </div>
