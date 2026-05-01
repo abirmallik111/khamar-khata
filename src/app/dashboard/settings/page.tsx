@@ -1,10 +1,11 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { Settings2, Users, Tag, Database } from 'lucide-react'
+import { Settings2, Users, Tag, Database, Lock } from 'lucide-react'
 import { SettingsClientActions } from './SettingsClientActions'
 import { BackupRestoreSection } from './BackupRestoreSection'
 import { deleteCategory } from './actions'
 import { DeleteCategoryButton } from '@/components/DeleteCategoryButton'
+import { ChangePasswordSection } from './ChangePasswordSection'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -81,6 +82,17 @@ export default async function SettingsPage() {
               + Add a category via the expense form
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Security & Password */}
+      <section className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden">
+        <div className="p-6 bg-(--color-surface-high)/30 border-b border-(--color-surface-high) flex items-center gap-3">
+          <Lock className="w-5 h-5 text-(--color-primary)" />
+          <h2 className="font-bold text-lg">Security & Password</h2>
+        </div>
+        <div className="p-6">
+          <ChangePasswordSection />
         </div>
       </section>
 
