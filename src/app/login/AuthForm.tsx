@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { login, signup } from './actions'
 import { User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { SubmitButton } from '@/components/SubmitButton'
@@ -103,10 +104,20 @@ export function AuthForm({ message }: { message?: string }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="password">
-              <Lock className="w-4 h-4 text-primary" />
-              Password
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="password">
+                <Lock className="w-4 h-4 text-primary" />
+                Password
+              </label>
+              {activeTab === 'login' && (
+                <Link 
+                  href="/forgot-password" 
+                  className="text-xs font-bold text-primary hover:underline transition-all"
+                >
+                  Forgot Password?
+                </Link>
+              )}
+            </div>
             <input
               className="rounded-xl px-4 py-4 bg-(--color-surface-high)/50 border-2 border-transparent focus:border-primary focus:bg-white outline-none transition-all shadow-inner"
               type="password"
