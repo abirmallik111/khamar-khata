@@ -73,7 +73,7 @@ export function AuthForm({ message }: { message?: string }) {
           </button>
         </div>
 
-        <form action={handleAction} className="p-8 flex flex-col gap-6">
+        <form action={handleAction} className="p-8 flex flex-col gap-6 pb-4">
           {activeTab === 'register' && (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="name">
@@ -115,16 +115,6 @@ export function AuthForm({ message }: { message?: string }) {
               placeholder="••••••••"
               required
             />
-            {activeTab === 'login' && (
-              <div className="flex justify-end">
-                <Link 
-                  href="/forgot-password" 
-                  className="text-xs font-bold text-primary hover:underline transition-all relative z-20"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-            )}
           </div>
 
           {activeTab === 'register' && (
@@ -156,6 +146,17 @@ export function AuthForm({ message }: { message?: string }) {
             {activeTab === 'login' ? 'SIGN IN' : 'CREATE ACCOUNT'}
           </SubmitButton>
         </form>
+
+        {activeTab === 'login' && (
+          <div className="px-8 pb-8 text-center">
+            <Link 
+              href="/forgot-password" 
+              className="text-sm font-bold text-primary hover:underline transition-all inline-block"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+        )}
       </div>
       
       <p className="text-center mt-10 text-(--color-on-surface-variant) text-sm font-medium">
