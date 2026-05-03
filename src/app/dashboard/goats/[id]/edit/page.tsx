@@ -16,15 +16,15 @@ export default async function EditGoatPage(props: { params: Promise<{ id: string
     notFound()
   }
 
-  const { data: owners } = await supabase
-    .from('owners')
-    .select('id, name, share_percentage')
-    .order('name')
-
-  const { data: contributions } = await supabase
-    .from('owner_contributions')
-    .select('owner_id, amount')
-    .eq('goat_id', params.id)
+  const [
+    { data: owners },
+    { data: contributions },
+    { data: goats }
+  ] = await Promise.all([
+    supabase.from('owners').select('id, name, share_percentage').order('name'),
+    supabase.from('owner_contributions').select('owner_id, amount').eq('goat_id', params.id),
+    supabase.from('goats').select('id, name_or_tag, gender').in('status', ['active', 'sick']).neq('id', params.id).order('name_or_tag')
+  ])
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
@@ -32,6 +32,7 @@ export default async function EditGoatPage(props: { params: Promise<{ id: string
         goat={goat} 
         owners={owners || []} 
         initialContributions={contributions || []}
+        goats={goats || []}
       />
     </div>
   )

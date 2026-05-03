@@ -1,16 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
 'use client'
 
-import { useState } from 'react'
-import { ArrowLeft, Upload, Info } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, Upload, Info, AlertTriangle } from 'lucide-react'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import imageCompression from 'browser-image-compression'
-import { addGoat } from '../actions'
+import { addGoat, checkInbreeding } from '../actions'
 import { Owner } from '@/types'
 import { SubmitButton } from '@/components/SubmitButton'
 
-export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[] }) {
+export function AddGoatForm({ 
+  owners, 
+  goats 
+}: { 
+  owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[],
+  goats: { id: string, name_or_tag: string, gender: string | null }[]
+}) {
   const { currencySymbol, formatCurrency } = useFormat()
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -20,6 +26,25 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
   const [source, setSource] = useState<'purchased' | 'born'>('purchased')
   const [purchasePrice, setPurchasePrice] = useState<string>('')
   const [ownerContributions, setOwnerContributions] = useState<Record<string, string>>({})
+  const [motherId, setMotherId] = useState('')
+  const [fatherId, setFatherId] = useState('')
+  const [inbreedingRisk, setInbreedingRisk] = useState<any>(null)
+
+  useEffect(() => {
+    async function verifyInbreeding() {
+      if (motherId && fatherId) {
+        const risk = await checkInbreeding(motherId, fatherId)
+        setInbreedingRisk(risk)
+      } else {
+        setInbreedingRisk(null)
+      }
+    }
+    verifyInbreeding()
+  }, [motherId, fatherId])
+  
+  // Pedigree Candidates
+  const mothers = goats.filter(g => g.gender === 'Female')
+  const fathers = goats.filter(g => g.gender === 'Male')
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -119,6 +144,63 @@ export function AddGoatForm({ owners }: { owners: Pick<Owner, 'id' | 'name' | 's
             </button>
           </div>
         </div>
+
+        {/* Pedigree Selection (Only for Born on Farm) */}
+        {source === 'born' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-md bg-(--color-surface-low) border border-(--color-surface-high)">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="mother_id">
+                Select Mother (Dam)
+                <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/50">Optional</span>
+              </label>
+              <select
+                id="mother_id"
+                name="mother_id"
+                value={motherId}
+                onChange={(e) => setMotherId(e.target.value)}
+                className="rounded-md px-4 py-3 bg-white border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
+              >
+                <option value="">-- No Mother Selected --</option>
+                {mothers.map(mother => (
+                  <option key={mother.id} value={mother.id}>{mother.name_or_tag}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="father_id">
+                Select Father (Sire)
+                <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/50">Optional</span>
+              </label>
+              <select
+                id="father_id"
+                name="father_id"
+                value={fatherId}
+                onChange={(e) => setFatherId(e.target.value)}
+                className="rounded-md px-4 py-3 bg-white border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
+              >
+                <option value="">-- No Father Selected --</option>
+                {fathers.map(father => (
+                  <option key={father.id} value={father.id}>{father.name_or_tag}</option>
+                ))}
+              </select>
+            </div>
+
+            {inbreedingRisk?.is_at_risk && (
+              <div className={`col-span-1 sm:col-span-2 p-4 rounded-md border flex items-start gap-3 transition-all ${inbreedingRisk.risk_level === 'CRITICAL' ? 'bg-error/10 border-error/20' : 'bg-orange-50 border-orange-200'}`}>
+                <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${inbreedingRisk.risk_level === 'CRITICAL' ? 'text-error' : 'text-orange-500'}`} />
+                <div>
+                  <p className={`text-sm font-bold ${inbreedingRisk.risk_level === 'CRITICAL' ? 'text-error' : 'text-orange-700'}`}>
+                    {inbreedingRisk.risk_level} Inbreeding Risk Detected
+                  </p>
+                  <p className="text-xs text-(--color-on-surface-variant) mt-1">
+                    {inbreedingRisk.relationship_path}. Common Ancestor: <span className="font-bold">{inbreedingRisk.common_ancestor_name}</span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1 flex flex-col gap-2">

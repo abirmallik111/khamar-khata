@@ -7,6 +7,9 @@ import { NoteModal } from './NoteModal'
 import { HealthRecordItem } from './HealthRecordItem'
 import { NoteItem } from './NoteItem'
 import { DeleteGoatButton } from './DeleteGoatButton'
+import { ProjectedROICalculator } from '@/components/ProjectedROICalculator'
+import { FamilyTree } from './FamilyTree'
+import { GrowthTimeline } from './GrowthTimeline'
 import { notFound } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/utils/format'
 
@@ -21,7 +24,12 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
       *,
       sales (sale_price, sale_date, note),
       goat_health_records (*),
-      goat_notes (*)
+      goat_notes (*),
+      goat_images (*),
+      mother:mother_id (id, name_or_tag),
+      father:father_id (id, name_or_tag),
+      offspring_as_mother:goats!mother_id (id, name_or_tag, gender, status),
+      offspring_as_father:goats!father_id (id, name_or_tag, gender, status)
     `)
     .eq('id', params.id)
     .single()
@@ -137,6 +145,22 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Source</p>
                 <p className="font-bold capitalize">{(goat as any).source || 'Purchased'}</p>
               </div>
+              {(goat as any).mother && (
+                <div>
+                  <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Mother (Dam)</p>
+                  <Link href={`/dashboard/goats/${(goat as any).mother.id}`} className="font-bold text-primary hover:underline">
+                    {(goat as any).mother.name_or_tag}
+                  </Link>
+                </div>
+              )}
+              {(goat as any).father && (
+                <div>
+                  <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Father (Sire)</p>
+                  <Link href={`/dashboard/goats/${(goat as any).father.id}`} className="font-bold text-primary hover:underline">
+                    {(goat as any).father.name_or_tag}
+                  </Link>
+                </div>
+              )}
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Breed</p>
                 <p className="font-bold">{goat.breed || 'Unknown'}</p>
@@ -159,6 +183,31 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               </div>
             </div>
           </div>
+
+          {/* Offspring Section */}
+          {((goat as any).offspring_as_mother?.length > 0 || (goat as any).offspring_as_father?.length > 0) && (
+            <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 flex flex-col gap-4">
+              <h3 className="text-sm font-bold text-(--color-on-surface-variant) uppercase tracking-wider flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                Offspring ({((goat as any).offspring_as_mother?.length || 0) + ((goat as any).offspring_as_father?.length || 0)})
+              </h3>
+              <div className="flex flex-col gap-3">
+                {[...(goat as any).offspring_as_mother || [], ...(goat as any).offspring_as_father || []].map((child: any) => (
+                  <Link 
+                    key={child.id} 
+                    href={`/dashboard/goats/${child.id}`}
+                    className="group flex items-center justify-between p-3 rounded-md bg-(--color-surface-low)/50 hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold text-sm group-hover:text-primary transition-colors">{child.name_or_tag}</span>
+                      <span className="text-[10px] text-(--color-on-surface-variant) uppercase font-medium">{child.gender} • {child.status}</span>
+                    </div>
+                    <ArrowLeft className="w-4 h-4 rotate-180 text-primary opacity-0 group-hover:opacity-100 transition-all" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: ROI and Timeline */}
@@ -207,11 +256,20 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               )}
             </div>
             
-            {!isSold && goat.status === 'active' && (
-              <div className="mt-4 flex items-start gap-3 p-3 bg-blue-500/10 text-blue-500 rounded-md text-sm">
-                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                <p>To realize profit, you must record a sale for this goat from the <Link href="/dashboard/sales/add" className="font-bold underline">Sales page</Link>.</p>
-              </div>
+            {!isSold && (goat.status === 'active' || goat.status === 'sick') ? (
+              <ProjectedROICalculator 
+                purchasePrice={goat.purchase_price}
+                totalExpenses={totalAssociatedExpense}
+                currency={currencyCode}
+                status={goat.status as any}
+              />
+            ) : (
+              !isSold && (
+                <div className="mt-4 flex items-start gap-3 p-3 bg-blue-500/10 text-blue-500 rounded-md text-sm">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  <p>To realize profit, you must record a sale for this goat from the <Link href="/dashboard/sales/add" className="font-bold underline">Sales page</Link>.</p>
+                </div>
+              )
             )}
           </div>
 
@@ -251,6 +309,17 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           </div>
         </div>
       </div>
+
+      {/* Growth Timeline Gallery */}
+      <GrowthTimeline goatId={goat.id} images={(goat as any).goat_images || []} />
+
+      {/* Genetic Lineage Visualization */}
+      <FamilyTree 
+        goat={{ id: goat.id, name_or_tag: goat.name_or_tag, gender: goat.gender }}
+        mother={(goat as any).mother}
+        father={(goat as any).father}
+        offspring={[...(goat as any).offspring_as_mother || [], ...(goat as any).offspring_as_father || []]}
+      />
 
       {/* Health & Medical Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">

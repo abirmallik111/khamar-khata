@@ -11,10 +11,20 @@ export default async function ReportsPage(props: {
   const startDate = searchParams.start || undefined
   const endDate = searchParams.end || undefined
 
-  const { data, error } = await supabase.rpc('get_farm_reports', {
-     p_start_date: startDate,
-     p_end_date: endDate
-   })
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  const [
+    { data, error },
+    { data: equityData }
+  ] = await Promise.all([
+    supabase.rpc('get_farm_reports', {
+      p_start_date: startDate,
+      p_end_date: endDate
+    }),
+    (supabase as any).rpc('get_partner_equity_report', {
+      p_user_id: user!.id
+    })
+  ])
 
   if (error) {
     console.error('Error fetching reports:', error)
@@ -40,7 +50,7 @@ export default async function ReportsPage(props: {
         </div>
       </header>
 
-      <ReportsUI initialData={data as any} />
+      <ReportsUI initialData={data as any} equityData={equityData || []} />
       
       {/* Print-only footer */}
       <div className="hidden print:block text-center text-xs text-gray-400 mt-12 pt-8 border-t border-gray-100">

@@ -37,6 +37,7 @@ export function AuthForm({ message }: { message?: string }) {
             alt="Khamar Khata Logo" 
             fill
             className="object-cover"
+            sizes="96px"
             priority
           />
         </div>

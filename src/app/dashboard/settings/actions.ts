@@ -22,7 +22,8 @@ export async function exportUserData() {
     'sales',
     'owner_contributions',
     'goat_health_records',
-    'goat_notes'
+    'goat_notes',
+    'goat_images'
   ]
 
   const results = await Promise.all(

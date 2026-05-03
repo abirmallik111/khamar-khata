@@ -35,6 +35,7 @@ export default function ForgotPasswordPage() {
               alt="Khamar Khata Logo" 
               fill
               className="object-cover"
+              sizes="96px"
               priority
             />
           </div>

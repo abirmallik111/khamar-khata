@@ -10,6 +10,16 @@ import { ProfitTrendsChart } from './components/ProfitTrendsChart'
 import { TopPerformingLivestock } from './components/TopPerformingLivestock'
 import { FinancialStatementTable } from './components/FinancialStatementTable'
 import { EmptyState } from './components/EmptyState'
+import { EquityReport } from './components/EquityReport'
+
+interface EquityData {
+  owner_id: string
+  owner_name: string
+  share_percentage: number
+  total_investment: number
+  realized_profit: number
+  active_asset_cost: number
+}
 
 interface GoatROI {
   id: string
@@ -48,13 +58,15 @@ interface ReportData {
 
 interface ReportsUIProps {
   initialData: ReportData
+  equityData: EquityData[]
 }
 
-export function ReportsUI({ initialData }: ReportsUIProps) {
+export function ReportsUI({ initialData, equityData }: ReportsUIProps) {
   const { currency } = useSettings()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'main' | 'equity'>('main')
 
   const currentRange = searchParams.get('range') || 'all'
   
@@ -158,8 +170,26 @@ export function ReportsUI({ initialData }: ReportsUIProps) {
         </button>
       </div>
 
+      {/* Tab Switcher */}
+      <div className="flex items-center gap-2 mb-8 bg-(--color-surface-low)/30 p-1 rounded-lg w-fit print:hidden">
+        <button
+          onClick={() => setActiveTab('main')}
+          className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'main' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:text-primary'}`}
+        >
+          Overview & Performance
+        </button>
+        <button
+          onClick={() => setActiveTab('equity')}
+          className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'equity' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:text-primary'}`}
+        >
+          Partner Equity & Dividends
+        </button>
+      </div>
+
       <div className="flex flex-col gap-8">
-        {/* Summary Row */}
+        {activeTab === 'main' ? (
+          <>
+            {/* Summary Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <SummaryCard 
             title="Net Profit" 
@@ -222,7 +252,11 @@ export function ReportsUI({ initialData }: ReportsUIProps) {
             Contact Advisor
           </button>
         </div>
-      </div>
-    </>
+      </>
+    ) : (
+      <EquityReport data={equityData} currency={currency} />
+    )}
+  </div>
+</>
   )
 }

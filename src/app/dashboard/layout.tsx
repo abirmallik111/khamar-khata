@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { LogOut } from 'lucide-react'
 import { SidebarLinks, BottomNav } from '@/components/DashboardNav'
+import { QuickActionsFAB } from '@/components/QuickActionsFAB'
 
 export default async function DashboardLayout({
   children,
@@ -39,6 +40,7 @@ export default async function DashboardLayout({
               alt="Khamar Khata Logo" 
               fill
               className="object-cover"
+              sizes="48px"
               priority
             />
           </div>
@@ -69,6 +71,7 @@ export default async function DashboardLayout({
                 alt="Logo" 
                 fill
                 className="object-cover"
+                sizes="40px"
               />
             </div>
             <div className="flex flex-col">
@@ -86,6 +89,9 @@ export default async function DashboardLayout({
         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
           {children}
         </div>
+
+        {/* Global Quick Actions */}
+        <QuickActionsFAB />
       </main>
 
       {/* Mobile Bottom Navigation */}

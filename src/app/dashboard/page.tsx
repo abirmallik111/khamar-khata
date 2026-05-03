@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PlusCircle, List, Users } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/utils/format'
 import { Goat, Expense, Category } from '@/types'
+import { ExpensePieChart } from '@/components/ExpensePieChart'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -17,51 +18,46 @@ export default async function DashboardPage() {
   
   const currencyCode = (profile?.currency || 'BDT') as any
 
-  // 1. Fetch Total Capital (sum of all goat purchase prices)
-  const { data: capitalData } = await supabase
-    .from('goats')
-    .select('purchase_price')
+  // 1. Fetch data in parallel to avoid waterfalls
+  const [
+    { data: capitalData },
+    { data: expenseData },
+    { data: salesData },
+    { data: recentGoats },
+    { data: recentExpenses },
+    { data: ownersData },
+    { data: categoryExpenses }
+  ] = await Promise.all([
+    supabase.from('goats').select('purchase_price'),
+    supabase.from('expenses').select('amount'),
+    supabase.from('sales').select('sale_price'),
+    supabase.from('goats')
+      .select('id, name_or_tag, created_at, purchase_price')
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase.from('expenses')
+      .select('id, amount, created_at, expense_categories(name)')
+      .order('created_at', { ascending: false })
+      .limit(3),
+    supabase.from('owners')
+      .select('id, name, owner_contributions(amount)')
+      .order('created_at'),
+    supabase.from('expenses')
+      .select('amount, expense_categories(name)')
+  ])
     
   const totalCapital = capitalData?.reduce((sum, goat) => sum + Number(goat.purchase_price), 0) || 0
-
-  // 2. Fetch Total Expenses
-  const { data: expenseData } = await supabase
-    .from('expenses')
-    .select('amount')
-    
   const totalExpense = expenseData?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0
-
-  // 3. Fetch Total Sales
-  const { data: salesData } = await supabase
-    .from('sales')
-    .select('sale_price')
-    
   const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.sale_price), 0) || 0
-
   const profit = totalSales - (totalCapital + totalExpense)
 
-  // 4. Fetch Recent Activity (Last 3 expenses and Last 3 goats)
-  const { data: recentGoats } = await supabase
-    .from('goats')
-    .select('id, name_or_tag, created_at, purchase_price')
-    .order('created_at', { ascending: false })
-    .limit(3)
-
-  const { data: recentExpenses } = await supabase
-    .from('expenses')
-    .select('id, amount, created_at, expense_categories(name)')
-    .order('created_at', { ascending: false })
-    .limit(3)
-
-  // 5. Fetch Owners and Contributions
-  const { data: ownersData } = await supabase
-    .from('owners')
-    .select(`
-      id, 
-      name, 
-      owner_contributions(amount)
-    `)
-    .order('created_at')
+  // Process category expenses for the chart
+  const categoryMap: Record<string, number> = {}
+  categoryExpenses?.forEach(exp => {
+    const catName = (exp.expense_categories as any)?.name || 'Uncategorized'
+    categoryMap[catName] = (categoryMap[catName] || 0) + Number(exp.amount)
+  })
+  const chartData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }))
 
   const ownersWithTotals = ownersData?.map(owner => ({
     ...owner,
@@ -125,11 +121,11 @@ export default async function DashboardPage() {
       {/* Bottom Section: Activity and Owners */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         {/* Recent Activity */}
-        <section className="lg:col-span-2">
+        <section className="lg:col-span-1">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold tracking-tight">Recent Activity</h2>
           </div>
-          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden h-[300px] flex flex-col">
+          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden h-[350px] flex flex-col border border-(--color-surface-high)">
             {activity.length === 0 ? (
               <div className="p-8 text-center text-(--color-on-surface-variant) flex-1 flex items-center justify-center">
                 No recent activity found.
@@ -137,7 +133,7 @@ export default async function DashboardPage() {
             ) : (
               <div className="flex flex-col overflow-y-auto">
                 {activity.map((item, idx) => (
-                  <div key={`${item.type}-${idx}`} className={`p-4 flex justify-between items-center ${idx !== activity.length - 1 ? 'border-b border-(--color-surface-high)' : ''}`}>
+                  <div key={`${item.type}-${idx}`} className={`p-4 flex justify-between items-center hover:bg-(--color-surface-low) transition-colors ${idx !== activity.length - 1 ? 'border-b border-(--color-surface-high)' : ''}`}>
                     <div className="flex items-center gap-4">
                       <div className={`p-2 rounded-full ${item.type === 'goat' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'}`}>
                         {item.type === 'goat' ? <PlusCircle className="w-5 h-5" /> : <List className="w-5 h-5" />}
@@ -159,6 +155,16 @@ export default async function DashboardPage() {
                 ))}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* Expense Breakdown Chart */}
+        <section className="lg:col-span-1">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold tracking-tight">Expense Breakdown</h2>
+          </div>
+          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-4 h-[350px] border border-(--color-surface-high) flex flex-col items-stretch">
+            <ExpensePieChart data={chartData} currency={currencyCode} />
           </div>
         </section>
 

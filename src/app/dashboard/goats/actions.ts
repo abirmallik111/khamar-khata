@@ -45,6 +45,9 @@ export async function addGoat(formData: FormData) {
     imageUrl = publicUrlData.publicUrl
   }
 
+  const motherId = formData.get('mother_id') as string || null
+  const fatherId = formData.get('father_id') as string || null
+
   const { error: insertError } = await (supabase as any).rpc('add_goat_with_contributions', {
     p_user_id: user.id,
     p_name_or_tag: nameOrTag,
@@ -54,7 +57,9 @@ export async function addGoat(formData: FormData) {
     p_purchase_date: purchaseDate,
     p_source: source,
     p_image_url: imageUrl,
-    p_owner_contributions: ownerContributions
+    p_owner_contributions: ownerContributions,
+    p_mother_id: motherId,
+    p_father_id: fatherId
   })
 
   if (insertError) {
@@ -113,6 +118,9 @@ export async function updateGoat(id: string, formData: FormData) {
   const contributionsJson = formData.get('owner_contributions') as string
   const contributions = contributionsJson ? JSON.parse(contributionsJson) : []
 
+  const motherId = formData.get('mother_id') as string || null
+  const fatherId = formData.get('father_id') as string || null
+
   const { error: updateError } = await (supabase as any).rpc('update_goat_with_contributions', {
     p_goat_id: id,
     p_user_id: user.id,
@@ -124,7 +132,9 @@ export async function updateGoat(id: string, formData: FormData) {
     p_source: updateData.source,
     p_status: updateData.status,
     p_image_url: updateData.image_url !== undefined ? updateData.image_url : (existingGoat?.image_url || null),
-    p_owner_contributions: contributions
+    p_owner_contributions: contributions,
+    p_mother_id: motherId,
+    p_father_id: fatherId
   })
 
   if (updateError) {
@@ -270,5 +280,75 @@ export async function editGoatNote(id: string, goatId: string, formData: FormDat
   }).eq('id', id).eq('user_id', user.id)
 
   if (error) throw new Error('Failed to update note')
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function checkInbreeding(motherId: string, fatherId: string) {
+  if (!motherId || !fatherId) return { is_at_risk: false }
+  
+  const supabase = await createClient()
+  const { data, error } = await (supabase as any).rpc('check_inbreeding_risk', {
+    p_mother_id: motherId,
+    p_father_id: fatherId
+  })
+
+  if (error) {
+    console.error('Error checking inbreeding risk:', error)
+    return { is_at_risk: false }
+  }
+
+  return data[0]
+}
+
+export async function addGoatTimelineImage(goatId: string, formData: FormData) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const imageFile = formData.get('image') as File
+  const caption = formData.get('caption') as string || null
+
+  if (!imageFile || imageFile.size === 0) {
+    throw new Error('Image file is required')
+  }
+
+  const fileExt = imageFile.name.split('.').pop()
+  const fileName = `${user.id}/${goatId}/${Math.random()}.${fileExt}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('goat_images')
+    .upload(fileName, imageFile)
+
+  if (uploadError) {
+    console.error('Image upload error:', uploadError)
+    throw new Error('Failed to upload image')
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('goat_images')
+    .getPublicUrl(fileName)
+
+  const { error } = await (supabase as any).from('goat_images').insert({
+    goat_id: goatId,
+    image_url: publicUrlData.publicUrl,
+    caption
+  })
+
+  if (error) {
+    console.error('Error adding timeline image record:', error)
+    throw new Error('Failed to save image record')
+  }
+
+  revalidatePath(`/dashboard/goats/${goatId}`)
+}
+
+export async function deleteGoatTimelineImage(id: string, goatId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await (supabase as any).from('goat_images').delete().eq('id', id)
+  
+  if (error) throw new Error('Failed to delete image record')
   revalidatePath(`/dashboard/goats/${goatId}`)
 }
