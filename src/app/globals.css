@@ -116,6 +116,10 @@
   75% { transform: translateX(5px); }
 }
 
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 .animate-bounce-subtle {
   animation: bounce-subtle 3s ease-in-out infinite;
 }

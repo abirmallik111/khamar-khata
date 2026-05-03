@@ -5,6 +5,9 @@ import { Camera, Plus, Trash2, Calendar, X, ImageIcon, Loader2 } from 'lucide-re
 import Image from 'next/image'
 import { formatDate } from '@/utils/format'
 import { addGoatTimelineImage, deleteGoatTimelineImage } from '../actions'
+import imageCompression from 'browser-image-compression'
+
+import { SmartImage } from '@/components/SmartImage'
 
 interface GrowthTimelineProps {
   goatId: string
@@ -21,10 +24,22 @@ export function GrowthTimeline({ goatId, images }: GrowthTimelineProps) {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const formData = new FormData(form)
     
     startTransition(async () => {
       try {
+        const file = formData.get('image') as File
+        if (file && file.size > 0) {
+          const options = {
+            maxSizeMB: 0.6,
+            maxWidthOrHeight: 1200,
+            useWebWorker: true
+          }
+          const compressedFile = await imageCompression(file, options)
+          formData.set('image', compressedFile)
+        }
+        
         await addGoatTimelineImage(goatId, formData)
         setIsModalOpen(false)
         setPreview(null)
@@ -82,7 +97,7 @@ export function GrowthTimeline({ goatId, images }: GrowthTimelineProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {sortedImages.map((img) => (
             <div key={img.id} className="group relative aspect-square rounded-lg overflow-hidden shadow-sm border border-(--color-surface-high) bg-(--color-surface-high)">
-              <Image 
+              <SmartImage 
                 src={img.image_url} 
                 alt={img.caption || 'Growth photo'} 
                 fill 

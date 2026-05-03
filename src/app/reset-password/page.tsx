@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
         <div className="flex flex-col items-center justify-center gap-4 mb-10">
           <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-primary/20 shadow-xl bg-white">
             <Image 
-              src="/logo.png" 
+              src="/logo-final.png" 
               alt="Khamar Khata Logo" 
               fill
               className="object-cover"

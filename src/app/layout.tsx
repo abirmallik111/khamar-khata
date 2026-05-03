@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-display",
@@ -23,8 +24,8 @@ export const metadata: Metadata = {
     title: "Khamar Khata",
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: "/logo-final.png",
+    apple: "/logo-final.png",
   },
 };
 
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-(--color-background) text-(--color-on-background)">
         <SettingsProvider>
           {children}
+          <OfflineBanner />
         </SettingsProvider>
       </body>
     </html>

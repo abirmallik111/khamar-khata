@@ -6,6 +6,8 @@ import { GoatSearch } from './GoatSearch'
 import { GoatFilter } from './GoatFilter'
 import { formatCurrency, formatDate } from '@/utils/format'
 
+import { SmartImage } from '@/components/SmartImage'
+
 export default async function GoatsPage(props: {
   searchParams: Promise<{ q?: string; status?: string }>
 }) {
@@ -96,7 +98,7 @@ export default async function GoatsPage(props: {
             <Link href={`/dashboard/goats/${goat.id}`} key={goat.id} className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden hover:shadow-lg transition-shadow group flex flex-col border border-transparent hover:border-primary/20">
               <div className="aspect-[4/3] bg-(--color-surface-high) relative overflow-hidden">
                 {goat.image_url ? (
-                  <Image 
+                  <SmartImage 
                     src={goat.image_url} 
                     alt={goat.name_or_tag} 
                     fill

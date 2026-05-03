@@ -10,6 +10,7 @@ import { DeleteGoatButton } from './DeleteGoatButton'
 import { ProjectedROICalculator } from '@/components/ProjectedROICalculator'
 import { FamilyTree } from './FamilyTree'
 import { GrowthTimeline } from './GrowthTimeline'
+import { SmartImage } from '@/components/SmartImage'
 import { notFound } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/utils/format'
 
@@ -135,7 +136,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col">
             <div className="aspect-square bg-(--color-surface-high) flex items-center justify-center relative">
               {goat.image_url ? (
-                <Image src={goat.image_url} alt={goat.name_or_tag} fill className="object-cover" sizes="(max-width: 768px) 100vw, 300px" />
+                <SmartImage src={goat.image_url} alt={goat.name_or_tag} fill className="object-cover" sizes="(max-width: 768px) 100vw, 300px" />
               ) : (
                 <ImageIcon className="w-12 h-12 text-(--color-on-surface-variant) opacity-50" />
               )}

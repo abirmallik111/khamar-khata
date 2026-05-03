@@ -100,8 +100,8 @@ export function EditGoatForm({
 
       if (imageFile) {
         const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1024,
+          maxSizeMB: 0.6,
+          maxWidthOrHeight: 1200,
           useWebWorker: true
         }
         

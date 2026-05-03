@@ -89,7 +89,7 @@ export function AddGoatForm({
       formData.set('owner_contributions', JSON.stringify(contributions))
 
       if (imageFile) {
-        const options = { maxSizeMB: 1, maxWidthOrHeight: 1024, useWebWorker: true }
+        const options = { maxSizeMB: 0.6, maxWidthOrHeight: 1200, useWebWorker: true }
         try {
           const compressedFile = await imageCompression(imageFile, options)
           formData.set('image', compressedFile, compressedFile.name)
