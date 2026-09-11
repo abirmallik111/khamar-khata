@@ -1,0 +1,21 @@
+name: Khamar Khata Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Ubuntu Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }} # e.g. 100.124.204.9 or Tailscale IP / Public IP
+          username: ${{ secrets.SERVER_USER }} # e.g. abirmallik11
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ~/khamar-khata
+            git pull origin main
+            docker compose -f docker-compose.prod.yml up -d --build
