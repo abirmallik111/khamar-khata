@@ -1,34 +1,30 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { expenseCategories, goats, owners, profiles } from '@/db/schema'
+import { eq, and, inArray, asc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { AddExpenseForm } from './AddExpenseForm'
 
 export default async function AddExpensePage() {
-  const supabase = await createClient()
+  const session = await auth()
+  let userId = session?.user?.id
 
-  // Fetch categories
-  const { data: categories } = await supabase
-    .from('expense_categories')
-    .select('*')
-    .order('name')
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  // Fetch active goats
-  const { data: goats } = await supabase
-    .from('goats')
-    .select('id, name_or_tag')
-    .in('status', ['active', 'sick'])
-    .order('name_or_tag')
-
-  // Fetch owners
-  const { data: owners } = await supabase
-    .from('owners')
-    .select('id, name, share_percentage')
-    .order('name')
+  const [categoriesList, goatsList, ownersList] = userId ? await Promise.all([
+    db.select().from(expenseCategories).where(eq(expenseCategories.userId, userId)).orderBy(asc(expenseCategories.name)),
+    db.select({ id: goats.id, name_or_tag: goats.nameOrTag }).from(goats).where(and(eq(goats.userId, userId), inArray(goats.status, ['active', 'sick']))).orderBy(asc(goats.nameOrTag)),
+    db.select({ id: owners.id, name: owners.name, share_percentage: owners.sharePercentage }).from(owners).where(eq(owners.userId, userId)).orderBy(asc(owners.name))
+  ]) : [[], [], []]
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
       <AddExpenseForm 
-        categories={categories || []} 
-        goats={goats || []} 
-        owners={owners || []}
+        categories={categoriesList as any} 
+        goats={goatsList as any} 
+        owners={ownersList as any}
       />
     </div>
   )

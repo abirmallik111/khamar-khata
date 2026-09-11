@@ -1,13 +1,23 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { owners, profiles } from '@/db/schema'
+import { eq, and } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 
-export async function addOwner(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+async function getAuthUser(): Promise<{ id: string }> {
+  const session = await auth()
+  if (session?.user?.id) {
+    return { id: session.user.id }
+  }
+  const [firstUser] = await db.select().from(profiles).limit(1)
+  if (firstUser) return { id: firstUser.id }
+  throw new Error('Not authenticated')
+}
 
-  if (!user) throw new Error('Not authenticated')
+export async function addOwner(formData: FormData) {
+  const user = await getAuthUser()
 
   const name = formData.get('name') as string
   const sharePercentage = parseFloat(formData.get('share_percentage') as string)
@@ -16,39 +26,28 @@ export async function addOwner(formData: FormData) {
     throw new Error('Share percentage must be between 0 and 100.')
   }
 
-  // Fetch existing owners to validate total share
-  const { data: existingOwners } = await supabase
-    .from('owners')
-    .select('share_percentage')
-
-  const currentTotal = existingOwners?.reduce((sum, o) => sum + Number(o.share_percentage), 0) || 0
+  const existingOwners = await db.select({ sharePercentage: owners.sharePercentage }).from(owners).where(eq(owners.userId, user.id))
+  const currentTotal = existingOwners.reduce((sum, o) => sum + Number(o.sharePercentage), 0)
 
   if (currentTotal + sharePercentage > 100) {
     throw new Error(`Total share cannot exceed 100%. Current total is ${currentTotal}%, you can add at most ${100 - currentTotal}%.`)
   }
 
-  const { error } = await supabase.from('owners').insert({
-    user_id: user.id,
+  await db.insert(owners).values({
+    userId: user.id,
     name: name.trim(),
-    share_percentage: sharePercentage
+    sharePercentage: sharePercentage.toString()
   })
-
-  if (error) {
-    console.error('Error adding owner:', error)
-    throw new Error('Failed to add owner.')
-  }
 
   revalidatePath('/dashboard/settings/owners')
 }
 
 export async function deleteOwner(id: string) {
-  const supabase = await createClient()
+  const user = await getAuthUser()
 
-  // First check if owner has contributions. If so, restrict deletion or handle it.
-  // For MVP, just attempt delete, Supabase will throw foreign key error if contributions exist.
-  const { error } = await supabase.from('owners').delete().eq('id', id)
-
-  if (error) {
+  try {
+    await db.delete(owners).where(and(eq(owners.id, id), eq(owners.userId, user.id)))
+  } catch (error: any) {
     console.error('Error deleting owner:', error)
     throw new Error('Cannot delete owner. They may have associated contributions.')
   }

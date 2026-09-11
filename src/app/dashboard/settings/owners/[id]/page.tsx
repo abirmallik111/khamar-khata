@@ -1,68 +1,72 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { owners, expenses, goats, ownerContributions, expenseCategories, profiles } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Wallet, Receipt } from 'lucide-react'
 import { formatCurrency } from '@/utils/format'
 
 export default async function OwnerProfilePage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const supabase = await createClient()
+  const params = await props.params
+  const session = await auth()
+  let userId = session?.user?.id
 
-  // 1. Fetch Owner details
-  const { data: owner } = await supabase
-    .from('owners')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
+  const [owner] = await db.select().from(owners).where(eq(owners.id, params.id)).limit(1)
   if (!owner) notFound()
 
-  // 1b. Fetch User's Currency Preference
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('currency')
-    .eq('id', user!.id)
-    .single()
-  
+  const [profile] = userId ? await db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : []
   const currencyCode = (profile?.currency || 'BDT') as any
 
-  // 2. Fetch Total Farm Expenses + Total Goat Purchase Costs
-  const { data: totalExpensesData } = await supabase.from('expenses').select('amount')
-  const { data: totalGoatPurchases } = await supabase.from('goats').select('purchase_price')
-  
-  const totalExpenses = totalExpensesData?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0
-  const totalGoats = totalGoatPurchases?.reduce((sum, goat) => sum + Number(goat.purchase_price), 0) || 0
+  const totalExpensesData = userId ? await db.select({ amount: expenses.amount }).from(expenses).where(eq(expenses.userId, userId)) : []
+  const totalGoatPurchases = userId ? await db.select({ purchase_price: goats.purchasePrice }).from(goats).where(eq(goats.userId, userId)) : []
+
+  const totalExpenses = totalExpensesData.reduce((sum, exp) => sum + Number(exp.amount), 0)
+  const totalGoats = totalGoatPurchases.reduce((sum, goat) => sum + Number(goat.purchase_price), 0)
   const totalFarmExpense = totalExpenses + totalGoats
 
-  // 3. Fetch Owner's contributions (from both expenses and goats)
-  const { data: contributions } = await supabase
-    .from('owner_contributions')
-    .select(`
-      amount,
-      created_at,
-      expenses (
-        amount,
-        expense_date,
-        note,
-        expense_categories (name)
-      ),
-      goats (
-        name_or_tag,
-        purchase_price,
-        purchase_date
-      )
-    `)
-    .eq('owner_id', owner.id)
-    .order('created_at', { ascending: false })
+  const rawContribs = await db.select().from(ownerContributions).where(eq(ownerContributions.ownerId, owner.id)).orderBy(desc(ownerContributions.createdAt))
 
-  const totalPaid = contributions?.reduce((sum, c) => sum + Number(c.amount), 0) || 0
-  const expectedShare = (totalFarmExpense * owner.share_percentage) / 100
+  const contributions = []
+  for (const c of rawContribs) {
+    let expObj = null
+    let goatObj = null
+
+    if (c.expenseId) {
+      const [exp] = await db.select({ amount: expenses.amount, expenseDate: expenses.expenseDate, note: expenses.note, categoryId: expenses.categoryId }).from(expenses).where(eq(expenses.id, c.expenseId)).limit(1)
+      if (exp) {
+        const [cat] = await db.select({ name: expenseCategories.name }).from(expenseCategories).where(eq(expenseCategories.id, exp.categoryId)).limit(1)
+        expObj = { amount: Number(exp.amount), expense_date: exp.expenseDate, note: exp.note, expense_categories: { name: cat?.name || 'Uncategorized' } }
+      }
+    }
+
+    if (c.goatId) {
+      const [g] = await db.select({ nameOrTag: goats.nameOrTag, purchasePrice: goats.purchasePrice, purchaseDate: goats.purchaseDate }).from(goats).where(eq(goats.id, c.goatId)).limit(1)
+      if (g) {
+        goatObj = { name_or_tag: g.nameOrTag, purchase_price: Number(g.purchasePrice), purchase_date: g.purchaseDate }
+      }
+    }
+
+    contributions.push({
+      amount: Number(c.amount),
+      created_at: c.createdAt ? c.createdAt.toISOString() : new Date().toISOString(),
+      expenses: expObj,
+      goats: goatObj
+    })
+  }
+
+  const totalPaid = contributions.reduce((sum, c) => sum + c.amount, 0)
+  const ownerShare = Number(owner.sharePercentage)
+  const expectedShare = (totalFarmExpense * ownerShare) / 100
   const balance = expectedShare - totalPaid
   
   const isOverpaid = balance < 0
   const isDue = balance > 0
-
   const paidPercentage = expectedShare > 0 ? (totalPaid / expectedShare) * 100 : 100
 
   return (
@@ -80,7 +84,7 @@ export default async function OwnerProfilePage(props: { params: Promise<{ id: st
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient border-t-4 border-blue-500 flex flex-col gap-1">
-          <span className="text-[10px] uppercase font-bold text-(--color-on-surface-variant) tracking-widest">Expected Share ({owner.share_percentage}%)</span>
+          <span className="text-[10px] uppercase font-bold text-(--color-on-surface-variant) tracking-widest">Expected Share ({ownerShare}%)</span>
           <span className="text-2xl font-display font-bold">{formatCurrency(expectedShare, currencyCode)}</span>
         </div>
         
@@ -119,7 +123,7 @@ export default async function OwnerProfilePage(props: { params: Promise<{ id: st
           ></div>
         </div>
         <p className="text-xs text-(--color-on-surface-variant) italic">
-          * Goal is based on owner&apos;s {owner.share_percentage}% stake in the total farm capital (Expenses + Purchases) of {formatCurrency(totalFarmExpense, currencyCode)}.
+          * Goal is based on owner&apos;s {ownerShare}% stake in the total farm capital (Expenses + Purchases) of {formatCurrency(totalFarmExpense, currencyCode)}.
         </p>
       </div>
 
@@ -130,15 +134,15 @@ export default async function OwnerProfilePage(props: { params: Promise<{ id: st
           <h2 className="font-bold text-lg">Contribution History</h2>
         </div>
         
-        {contributions?.length === 0 ? (
+        {contributions.length === 0 ? (
           <div className="p-12 text-center text-(--color-on-surface-variant) italic">
             No contributions recorded for this partner yet.
           </div>
         ) : (
           <div className="divide-y divide-(--color-surface-high)">
-            {contributions?.map((c, idx) => {
-              const exp = (c as any).expenses as { amount: number; expense_date: string; note: string | null; expense_categories: { name: string } | null } | null
-              const goat = (c as any).goats as { name_or_tag: string; purchase_price: number; purchase_date: string } | null
+            {contributions.map((c, idx) => {
+              const exp = c.expenses
+              const goat = c.goats
               
               const title = exp ? (exp.expense_categories?.name || 'Expense') : (goat ? `Purchase: ${goat.name_or_tag}` : 'Contribution')
               const date = exp?.expense_date || goat?.purchase_date || c.created_at

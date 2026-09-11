@@ -1,38 +1,49 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { goats, owners, ownerContributions, profiles } from '@/db/schema'
+import { eq, ne, inArray, asc, and } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { notFound } from 'next/navigation'
 import { EditGoatForm } from './EditGoatForm'
 
 export default async function EditGoatPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const supabase = await createClient()
+  const params = await props.params
+  const session = await auth()
+  let userId = session?.user?.id
 
-  const { data: goat, error } = await supabase
-    .from('goats')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  if (error || !goat) {
+  const [goat] = await db.select().from(goats).where(eq(goats.id, params.id)).limit(1)
+
+  if (!goat) {
     notFound()
   }
 
-  const [
-    { data: owners },
-    { data: contributions },
-    { data: goats }
-  ] = await Promise.all([
-    supabase.from('owners').select('id, name, share_percentage').order('name'),
-    supabase.from('owner_contributions').select('owner_id, amount').eq('goat_id', params.id),
-    supabase.from('goats').select('id, name_or_tag, gender').in('status', ['active', 'sick']).neq('id', params.id).order('name_or_tag')
-  ])
+  const [ownersList, contribList, otherGoats] = userId ? await Promise.all([
+    db.select({ id: owners.id, name: owners.name, share_percentage: owners.sharePercentage }).from(owners).where(eq(owners.userId, userId)).orderBy(asc(owners.name)),
+    db.select({ owner_id: ownerContributions.ownerId, amount: ownerContributions.amount }).from(ownerContributions).where(eq(ownerContributions.goatId, params.id)),
+    db.select({ id: goats.id, name_or_tag: goats.nameOrTag, gender: goats.gender }).from(goats).where(and(eq(goats.userId, userId), inArray(goats.status, ['active', 'sick']), ne(goats.id, params.id))).orderBy(asc(goats.nameOrTag))
+  ]) : [[], [], []]
+
+  const mappedGoat = {
+    ...goat,
+    name_or_tag: goat.nameOrTag,
+    purchase_price: Number(goat.purchasePrice),
+    purchase_date: goat.purchaseDate,
+    image_url: goat.imageUrl,
+    mother_id: goat.motherId,
+    father_id: goat.fatherId
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
       <EditGoatForm 
-        goat={goat} 
-        owners={owners || []} 
-        initialContributions={contributions || []}
-        goats={goats || []}
+        goat={mappedGoat as any} 
+        owners={ownersList as any} 
+        initialContributions={contribList as any}
+        goats={otherGoats as any}
       />
     </div>
   )

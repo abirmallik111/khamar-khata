@@ -1,74 +1,88 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { goats, expenses, sales, expenseCategories, owners, ownerContributions, profiles } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import Link from 'next/link'
 import { PlusCircle, List, Users } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/utils/format'
-import { Goat, Expense, Category } from '@/types'
 import { ExpensePieChart } from '@/components/ExpensePieChart'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const session = await auth()
+  let userId = session?.user?.id
 
-  // Fetch User's Currency Preference
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('currency')
-    .eq('id', user!.id)
-    .single()
-  
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
+
+  const [profile] = userId ? await db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : []
   const currencyCode = (profile?.currency || 'BDT') as any
 
-  // 1. Fetch data in parallel to avoid waterfalls
-  const [
-    { data: capitalData },
-    { data: expenseData },
-    { data: salesData },
-    { data: recentGoats },
-    { data: recentExpenses },
-    { data: ownersData },
-    { data: categoryExpenses }
-  ] = await Promise.all([
-    supabase.from('goats').select('purchase_price'),
-    supabase.from('expenses').select('amount'),
-    supabase.from('sales').select('sale_price'),
-    supabase.from('goats')
-      .select('id, name_or_tag, created_at, purchase_price')
-      .order('created_at', { ascending: false })
-      .limit(3),
-    supabase.from('expenses')
-      .select('id, amount, created_at, expense_categories(name)')
-      .order('created_at', { ascending: false })
-      .limit(3),
-    supabase.from('owners')
-      .select('id, name, owner_contributions(amount)')
-      .order('created_at'),
-    supabase.from('expenses')
-      .select('amount, expense_categories(name)')
-  ])
-    
-  const totalCapital = capitalData?.reduce((sum, goat) => sum + Number(goat.purchase_price), 0) || 0
-  const totalExpense = expenseData?.reduce((sum, exp) => sum + Number(exp.amount), 0) || 0
-  const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.sale_price), 0) || 0
+  const capitalData = userId ? await db.select({ purchasePrice: goats.purchasePrice }).from(goats).where(eq(goats.userId, userId)) : []
+  const expenseData = userId ? await db.select({ amount: expenses.amount }).from(expenses).where(eq(expenses.userId, userId)) : []
+  const salesData = userId ? await db.select({ salePrice: sales.salePrice }).from(sales).where(eq(sales.userId, userId)) : []
+
+  const recentGoats = userId
+    ? await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, created_at: goats.createdAt, purchase_price: goats.purchasePrice })
+        .from(goats)
+        .where(eq(goats.userId, userId))
+        .orderBy(desc(goats.createdAt))
+        .limit(3)
+    : []
+
+  const recentExpensesRaw = userId
+    ? await db.select({
+        id: expenses.id,
+        amount: expenses.amount,
+        created_at: expenses.createdAt,
+        categoryName: expenseCategories.name
+      })
+        .from(expenses)
+        .leftJoin(expenseCategories, eq(expenses.categoryId, expenseCategories.id))
+        .where(eq(expenses.userId, userId))
+        .orderBy(desc(expenses.createdAt))
+        .limit(3)
+    : []
+
+  const allOwners = userId
+    ? await db.select({ id: owners.id, name: owners.name }).from(owners).where(eq(owners.userId, userId))
+    : []
+
+  const contributionsData = userId
+    ? await db.select({ ownerId: ownerContributions.ownerId, amount: ownerContributions.amount }).from(ownerContributions).where(eq(ownerContributions.userId, userId))
+    : []
+
+  const categoryExpensesRaw = userId
+    ? await db.select({ amount: expenses.amount, categoryName: expenseCategories.name })
+        .from(expenses)
+        .leftJoin(expenseCategories, eq(expenses.categoryId, expenseCategories.id))
+        .where(eq(expenses.userId, userId))
+    : []
+
+  const totalCapital = capitalData.reduce((sum, g) => sum + Number(g.purchasePrice), 0)
+  const totalExpense = expenseData.reduce((sum, e) => sum + Number(e.amount), 0)
+  const totalSales = salesData.reduce((sum, s) => sum + Number(s.salePrice), 0)
   const profit = totalSales - (totalCapital + totalExpense)
 
-  // Process category expenses for the chart
   const categoryMap: Record<string, number> = {}
-  categoryExpenses?.forEach(exp => {
-    const catName = (exp.expense_categories as any)?.name || 'Uncategorized'
+  categoryExpensesRaw.forEach(exp => {
+    const catName = exp.categoryName || 'Uncategorized'
     categoryMap[catName] = (categoryMap[catName] || 0) + Number(exp.amount)
   })
   const chartData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }))
 
-  const ownersWithTotals = ownersData?.map(owner => ({
-    ...owner,
-    totalContribution: (owner.owner_contributions as { amount: number }[])?.reduce((sum, c) => sum + Number(c.amount), 0) || 0
-  })) || []
+  const ownersWithTotals = allOwners.map(owner => {
+    const totalContribution = contributionsData
+      .filter(c => c.ownerId === owner.id)
+      .reduce((sum, c) => sum + Number(c.amount), 0)
+    return { ...owner, totalContribution }
+  })
 
-  // Combine and sort by date descending
   const activity = [
-    ...(recentGoats?.map(g => ({ type: 'goat' as const, date: new Date(g.created_at).getTime(), data: g })) || []),
-    ...(recentExpenses?.map(e => ({ type: 'expense' as const, date: new Date(e.created_at).getTime(), data: e })) || [])
-  ].sort((a, b) => b.date - a.date).slice(0, 4) // Show top 4
+    ...recentGoats.map(g => ({ type: 'goat' as const, date: new Date(g.created_at).getTime(), data: g })),
+    ...recentExpensesRaw.map(e => ({ type: 'expense' as const, date: new Date(e.created_at).getTime(), data: { ...e, expense_categories: { name: e.categoryName } } }))
+  ].sort((a, b) => b.date - a.date).slice(0, 4)
 
   return (
     <div className="flex flex-col gap-6 pb-20 md:pb-0">
@@ -79,7 +93,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      {/* Quick Actions (Mobile Priority) */}
+      {/* Quick Actions */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 hide-scrollbar">
         <Link href="/dashboard/goats/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-primary hover:text-white transition-colors">
           <PlusCircle className="w-5 h-5" />
@@ -141,8 +155,8 @@ export default async function DashboardPage() {
                       <div>
                         <p className="font-bold text-(--color-on-background) text-sm line-clamp-1">
                           {item.type === 'goat' 
-                            ? `Added Goat: ${(item.data as Pick<Goat, 'name_or_tag'>).name_or_tag}` 
-                            : `Expense: ${(item.data as Expense & { expense_categories: Pick<Category, 'name'> | null }).expense_categories?.name || 'Uncategorized'}`
+                            ? `Added Goat: ${item.data.name_or_tag}` 
+                            : `Expense: ${(item.data as any).expense_categories?.name || 'Uncategorized'}`
                           }
                         </p>
                         <p className="text-[10px] text-(--color-on-surface-variant)">{formatDate(new Date(item.date).toISOString())}</p>

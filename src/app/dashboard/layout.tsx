@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/server'
+import { auth, signOut as authSignOut } from '@/auth'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -11,23 +11,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
+  const session = await auth()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const signOut = async () => {
+  const handleSignOut = async () => {
     'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
+    await authSignOut({ redirectTo: '/login' })
   }
-
 
   return (
     <div className="flex h-screen bg-(--color-background) overflow-hidden">
@@ -52,7 +41,7 @@ export default async function DashboardLayout({
 
         <SidebarLinks />
 
-        <form action={signOut} className="mt-auto">
+        <form action={handleSignOut} className="mt-auto">
           <button className="flex items-center gap-3 px-3 py-3 w-full rounded-md hover:bg-error/10 text-error transition-colors font-medium">
             <LogOut className="w-5 h-5" />
             <span>Sign Out</span>
@@ -79,7 +68,7 @@ export default async function DashboardLayout({
               <span className="font-bold text-sm leading-none text-amber-900 font-display">Khata</span>
             </div>
           </Link>
-          <form action={signOut}>
+          <form action={handleSignOut}>
             <button className="text-error p-2 rounded-full hover:bg-error/10 transition-colors" aria-label="Sign out">
               <LogOut className="w-5 h-5" />
             </button>

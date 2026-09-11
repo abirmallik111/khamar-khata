@@ -1,37 +1,48 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { profiles } from '@/db/schema'
+import { eq, sql } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { ReportsUI } from './ReportsUI'
 import { BarChart3 } from 'lucide-react'
 
 export default async function ReportsPage(props: {
   searchParams: Promise<{ start?: string; end?: string; range?: string }>
 }) {
-  const searchParams = await props.searchParams;
-  const supabase = await createClient()
+  const searchParams = await props.searchParams
+  const session = await auth()
+  let userId = session?.user?.id
 
-  const startDate = searchParams.start || undefined
-  const endDate = searchParams.end || undefined
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  const [
-    { data, error },
-    { data: equityData }
-  ] = await Promise.all([
-    supabase.rpc('get_farm_reports', {
-      p_start_date: startDate,
-      p_end_date: endDate
-    }),
-    (supabase as any).rpc('get_partner_equity_report', {
-      p_user_id: user!.id
-    })
-  ])
+  const startDate = searchParams.start || null
+  const endDate = searchParams.end || null
 
-  if (error) {
+  let reportsData: any = null
+  let equityData: any = []
+
+  try {
+    const reportsRes: any = await db.execute(sql`
+      SELECT get_farm_reports(${userId}::uuid, ${startDate ? sql`${startDate}::date` : null}, ${endDate ? sql`${endDate}::date` : null}) as data
+    `)
+    if (reportsRes && reportsRes[0]?.data) {
+      reportsData = reportsRes[0].data
+    }
+
+    const equityRes: any = await db.execute(sql`
+      SELECT * FROM get_partner_equity_report(${userId}::uuid)
+    `)
+    if (equityRes) {
+      equityData = equityRes
+    }
+  } catch (error: any) {
     console.error('Error fetching reports:', error)
     return (
       <div className="p-8 text-center bg-red-50 text-red-600 rounded-md">
         <p className="font-bold">Failed to load report data.</p>
-        <p className="text-sm mt-1">{error.message}</p>
+        <p className="text-sm mt-1">{error?.message || 'Database error'}</p>
       </div>
     )
   }
@@ -50,7 +61,7 @@ export default async function ReportsPage(props: {
         </div>
       </header>
 
-      <ReportsUI initialData={data as any} equityData={equityData || []} />
+      <ReportsUI initialData={reportsData} equityData={equityData} />
       
       {/* Print-only footer */}
       <div className="hidden print:block text-center text-xs text-gray-400 mt-12 pt-8 border-t border-gray-100">

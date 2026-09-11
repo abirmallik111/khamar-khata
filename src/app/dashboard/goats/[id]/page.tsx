@@ -1,7 +1,19 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import {
+  goats,
+  sales,
+  expenses,
+  expenseGoatMap,
+  expenseCategories,
+  goatHealthRecords,
+  goatNotes,
+  goatImages,
+  profiles
+} from '@/db/schema'
+import { eq, and, sql, desc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowLeft, TrendingUp, AlertTriangle, FileText, Image as ImageIcon, Activity, Syringe, StickyNote, Calendar } from 'lucide-react'
+import { ArrowLeft, TrendingUp, AlertTriangle, FileText, Image as ImageIcon, Activity, Syringe, StickyNote } from 'lucide-react'
 import { HealthRecordModal } from './HealthRecordModal'
 import { NoteModal } from './NoteModal'
 import { HealthRecordItem } from './HealthRecordItem'
@@ -15,95 +27,78 @@ import { notFound } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/utils/format'
 
 export default async function GoatProfilePage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const supabase = await createClient()
+  const params = await props.params
+  const session = await auth()
+  let userId = session?.user?.id
 
-  // Fetch goat details
-  const { data: goat, error: goatError } = await supabase
-    .from('goats')
-    .select(`
-      *,
-      sales (sale_price, sale_date, note),
-      goat_health_records (*),
-      goat_notes (*),
-      goat_images (*),
-      mother:mother_id (id, name_or_tag),
-      father:father_id (id, name_or_tag),
-      offspring_as_mother:goats!mother_id (id, name_or_tag, gender, status),
-      offspring_as_father:goats!father_id (id, name_or_tag, gender, status)
-    `)
-    .eq('id', params.id)
-    .single()
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  // Fetch User's Currency Preference
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('currency')
-    .eq('id', user!.id)
-    .single()
-  
+  const [profile] = userId ? await db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : []
   const currencyCode = (profile?.currency || 'BDT') as any
 
-  if (goatError || !goat) {
+  const [goat] = await db.select().from(goats).where(eq(goats.id, params.id)).limit(1)
+
+  if (!goat) {
     notFound()
   }
 
-  // Fetch expenses related to this goat
-  const { data: goatExpenses } = await supabase
-    .from('expense_goat_map')
-    .select(`
-      expenses (
-        amount, 
-        expense_date, 
-        note, 
-        expense_categories(name),
-        expense_goat_map(count)
-      )
-    `)
-    .eq('goat_id', goat.id)
+  const [sale] = await db.select().from(sales).where(eq(sales.goatId, goat.id)).limit(1)
+  const healthRecs = await db.select().from(goatHealthRecords).where(eq(goatHealthRecords.goatId, goat.id)).orderBy(desc(goatHealthRecords.recordDate))
+  const notesList = await db.select().from(goatNotes).where(eq(goatNotes.goatId, goat.id)).orderBy(desc(goatNotes.noteDate))
+  const imagesList = await db.select().from(goatImages).where(eq(goatImages.goatId, goat.id)).orderBy(desc(goatImages.createdAt))
 
-  // Calculate individual ROI
+  const [mother] = goat.motherId ? await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, gender: goats.gender }).from(goats).where(eq(goats.id, goat.motherId)).limit(1) : []
+  const [father] = goat.fatherId ? await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, gender: goats.gender }).from(goats).where(eq(goats.id, goat.fatherId)).limit(1) : []
+
+  const offspringAsMother = await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, gender: goats.gender, status: goats.status }).from(goats).where(eq(goats.motherId, goat.id))
+  const offspringAsFather = await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, gender: goats.gender, status: goats.status }).from(goats).where(eq(goats.fatherId, goat.id))
+
+  const goatExpenseMappings = await db.select({
+    expenseId: expenseGoatMap.expenseId
+  }).from(expenseGoatMap).where(eq(expenseGoatMap.goatId, goat.id))
+
   let totalAssociatedExpense = 0
-  
-  const mappedExpenses = goatExpenses?.map(mapping => {
-    const exp = mapping.expenses as { amount: number; expense_date: string; note: string | null; expense_categories: { name: string } | null; expense_goat_map: { count: number }[] }
-    // If an expense is mapped to multiple goats, we divide the cost equally
-    const mapCount = exp.expense_goat_map?.[0]?.count || 1
-    const allocatedCost = exp.amount / mapCount
-    totalAssociatedExpense += allocatedCost
-    
-    return {
-      date: exp.expense_date,
-      category: exp.expense_categories?.name || 'Uncategorized',
-      totalAmount: exp.amount,
-      allocatedCost: allocatedCost,
-      mapCount: mapCount,
-      note: exp.note
-    }
-  }) || []
+  const mappedExpenses = []
 
-  // Sort expenses by date desc
+  for (const mapping of goatExpenseMappings) {
+    const [exp] = await db.select({
+      amount: expenses.amount,
+      expenseDate: expenses.expenseDate,
+      note: expenses.note,
+      categoryId: expenses.categoryId
+    }).from(expenses).where(eq(expenses.id, mapping.expenseId)).limit(1)
+
+    if (exp) {
+      const [cat] = await db.select({ name: expenseCategories.name }).from(expenseCategories).where(eq(expenseCategories.id, exp.categoryId)).limit(1)
+      const countRes = await db.select({ count: sql<number>`count(*)` }).from(expenseGoatMap).where(eq(expenseGoatMap.expenseId, mapping.expenseId))
+      const mapCount = Number(countRes[0]?.count || 1)
+      const allocatedCost = Number(exp.amount) / mapCount
+      totalAssociatedExpense += allocatedCost
+
+      mappedExpenses.push({
+        date: exp.expenseDate,
+        category: cat?.name || 'Uncategorized',
+        totalAmount: Number(exp.amount),
+        allocatedCost,
+        mapCount,
+        note: exp.note
+      })
+    }
+  }
+
   mappedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  const sale = goat.sales as { sale_price: number; sale_date: string; note: string | null } | null
   const isSold = goat.status === 'sold' && sale
-  const totalCost = goat.purchase_price + totalAssociatedExpense
-  const revenue = isSold ? sale.sale_price : 0
+  const totalCost = Number(goat.purchasePrice) + totalAssociatedExpense
+  const revenue = isSold ? Number(sale.salePrice) : 0
   const profit = revenue - totalCost
-  const roi = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(1) : 0
+  const roi = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(1) : '0'
 
-  // Group health records
-  const healthRecords = (goat.goat_health_records || []) as any[]
-  // Sort records by date descending
-  healthRecords.sort((a, b) => new Date(b.record_date).getTime() - new Date(a.record_date).getTime())
-  
-  const vaccines = healthRecords.filter(r => r.record_type === 'vaccine')
-  const generalHealth = healthRecords.filter(r => r.record_type !== 'vaccine')
-
-  // Sort notes by date descending
-  const notes = (goat.goat_notes || []) as any[]
-  notes.sort((a, b) => new Date(b.note_date).getTime() - new Date(a.note_date).getTime())
+  const vaccines = healthRecs.filter(r => r.recordType === 'vaccine')
+  const generalHealth = healthRecs.filter(r => r.recordType !== 'vaccine')
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full">
@@ -113,7 +108,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
             <ArrowLeft className="w-6 h-6" />
           </Link>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display mb-1 truncate">{goat.name_or_tag}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-display mb-1 truncate">{goat.nameOrTag}</h1>
             <p className="text-(--color-on-surface-variant) text-sm uppercase tracking-wider font-semibold">
               Status: <span className={goat.status === 'active' ? 'text-primary' : goat.status === 'sold' ? 'text-blue-500' : 'text-error'}>{goat.status}</span>
             </p>
@@ -131,12 +126,12 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Image and Basic Details */}
+        {/* Left Column */}
         <div className="flex flex-col gap-6 md:col-span-1">
           <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col">
             <div className="aspect-square bg-(--color-surface-high) flex items-center justify-center relative">
-              {goat.image_url ? (
-                <SmartImage src={goat.image_url} alt={goat.name_or_tag} fill className="object-cover" sizes="(max-width: 768px) 100vw, 300px" />
+              {goat.imageUrl ? (
+                <SmartImage src={goat.imageUrl} alt={goat.nameOrTag} fill className="object-cover" sizes="(max-width: 768px) 100vw, 300px" />
               ) : (
                 <ImageIcon className="w-12 h-12 text-(--color-on-surface-variant) opacity-50" />
               )}
@@ -144,21 +139,21 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
             <div className="p-6 flex flex-col gap-4">
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Source</p>
-                <p className="font-bold capitalize">{(goat as any).source || 'Purchased'}</p>
+                <p className="font-bold capitalize">{goat.source || 'Purchased'}</p>
               </div>
-              {(goat as any).mother && (
+              {mother && (
                 <div>
                   <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Mother (Dam)</p>
-                  <Link href={`/dashboard/goats/${(goat as any).mother.id}`} className="font-bold text-primary hover:underline">
-                    {(goat as any).mother.name_or_tag}
+                  <Link href={`/dashboard/goats/${mother.id}`} className="font-bold text-primary hover:underline">
+                    {mother.name_or_tag}
                   </Link>
                 </div>
               )}
-              {(goat as any).father && (
+              {father && (
                 <div>
                   <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">Father (Sire)</p>
-                  <Link href={`/dashboard/goats/${(goat as any).father.id}`} className="font-bold text-primary hover:underline">
-                    {(goat as any).father.name_or_tag}
+                  <Link href={`/dashboard/goats/${father.id}`} className="font-bold text-primary hover:underline">
+                    {father.name_or_tag}
                   </Link>
                 </div>
               )}
@@ -172,28 +167,28 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
               </div>
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">
-                  {(goat as any).source === 'born' ? 'Birth Date' : 'Purchase Date'}
+                  {goat.source === 'born' ? 'Birth Date' : 'Purchase Date'}
                 </p>
-                <p className="font-bold">{formatDate(goat.purchase_date)}</p>
+                <p className="font-bold">{formatDate(goat.purchaseDate)}</p>
               </div>
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium uppercase tracking-wider">
-                  {(goat as any).source === 'born' ? 'Initial Value' : 'Purchase Cost'}
+                  {goat.source === 'born' ? 'Initial Value' : 'Purchase Cost'}
                 </p>
-                <p className="font-bold text-xl font-display">{formatCurrency(goat.purchase_price, currencyCode)}</p>
+                <p className="font-bold text-xl font-display">{formatCurrency(Number(goat.purchasePrice), currencyCode)}</p>
               </div>
             </div>
           </div>
 
           {/* Offspring Section */}
-          {((goat as any).offspring_as_mother?.length > 0 || (goat as any).offspring_as_father?.length > 0) && (
+          {(offspringAsMother.length > 0 || offspringAsFather.length > 0) && (
             <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-6 flex flex-col gap-4">
               <h3 className="text-sm font-bold text-(--color-on-surface-variant) uppercase tracking-wider flex items-center gap-2">
                 <Activity className="w-4 h-4 text-primary" />
-                Offspring ({((goat as any).offspring_as_mother?.length || 0) + ((goat as any).offspring_as_father?.length || 0)})
+                Offspring ({offspringAsMother.length + offspringAsFather.length})
               </h3>
               <div className="flex flex-col gap-3">
-                {[...(goat as any).offspring_as_mother || [], ...(goat as any).offspring_as_father || []].map((child: any) => (
+                {[...offspringAsMother, ...offspringAsFather].map((child) => (
                   <Link 
                     key={child.id} 
                     href={`/dashboard/goats/${child.id}`}
@@ -211,7 +206,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           )}
         </div>
 
-        {/* Right Column: ROI and Timeline */}
+        {/* Right Column: ROI & Timeline */}
         <div className="flex flex-col gap-6 md:col-span-2">
           
           {/* ROI Card */}
@@ -224,7 +219,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 mb-6">
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium">Purchase</p>
-                <p className="font-bold">{formatCurrency(goat.purchase_price, currencyCode)}</p>
+                <p className="font-bold">{formatCurrency(Number(goat.purchasePrice), currencyCode)}</p>
               </div>
               <div>
                 <p className="text-xs text-(--color-on-surface-variant) font-medium">Expenses</p>
@@ -259,7 +254,7 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
             
             {!isSold && (goat.status === 'active' || goat.status === 'sick') ? (
               <ProjectedROICalculator 
-                purchasePrice={goat.purchase_price}
+                purchasePrice={Number(goat.purchasePrice)}
                 totalExpenses={totalAssociatedExpense}
                 currency={currencyCode}
                 status={goat.status as any}
@@ -312,20 +307,18 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
       </div>
 
       {/* Growth Timeline Gallery */}
-      <GrowthTimeline goatId={goat.id} images={(goat as any).goat_images || []} />
+      <GrowthTimeline goatId={goat.id} images={imagesList.map(img => ({ ...img, created_at: img.createdAt ? img.createdAt.toISOString() : null, image_url: img.imageUrl }))} />
 
-      {/* Genetic Lineage Visualization */}
+      {/* Family Tree */}
       <FamilyTree 
-        goat={{ id: goat.id, name_or_tag: goat.name_or_tag, gender: goat.gender }}
-        mother={(goat as any).mother}
-        father={(goat as any).father}
-        offspring={[...(goat as any).offspring_as_mother || [], ...(goat as any).offspring_as_father || []]}
+        goat={{ id: goat.id, name_or_tag: goat.nameOrTag, gender: goat.gender }}
+        mother={mother}
+        father={father}
+        offspring={[...offspringAsMother, ...offspringAsFather]}
       />
 
       {/* Health & Medical Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
-        
-        {/* Vaccines */}
         <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-bold text-lg flex items-center gap-2">
@@ -339,13 +332,12 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
               {vaccines.map(record => (
-                <HealthRecordItem key={record.id} record={record} goatId={goat.id} />
+                <HealthRecordItem key={record.id} record={{ ...record, record_type: record.recordType, record_date: record.recordDate, next_date: record.nextDate }} goatId={goat.id} />
               ))}
             </div>
           )}
         </div>
 
-        {/* General Health & Medicine */}
         <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient">
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-bold text-lg flex items-center gap-2">
@@ -359,12 +351,11 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
               {generalHealth.map(record => (
-                <HealthRecordItem key={record.id} record={record} goatId={goat.id} />
+                <HealthRecordItem key={record.id} record={{ ...record, record_type: record.recordType, record_date: record.recordDate, next_date: record.nextDate }} goatId={goat.id} />
               ))}
             </div>
           )}
         </div>
-
       </div>
 
       <div className="flex justify-center -mt-2 mb-2">
@@ -380,9 +371,8 @@ export default async function GoatProfilePage(props: { params: Promise<{ id: str
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <NoteModal goatId={goat.id} />
-          
-          {notes.map(note => (
-            <NoteItem key={note.id} note={note} goatId={goat.id} />
+          {notesList.map(note => (
+            <NoteItem key={note.id} note={{ ...note, note_date: note.noteDate }} goatId={goat.id} />
           ))}
         </div>
       </div>

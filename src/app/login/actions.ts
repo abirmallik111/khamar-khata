@@ -2,77 +2,62 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
-import { createClient } from '@/utils/supabase/server'
+import { signIn } from '@/auth'
+import { db } from '@/db'
+import { profiles } from '@/db/schema'
+import { eq } from 'drizzle-orm'
+import bcrypt from 'bcryptjs'
 
 export async function login(formData: FormData) {
-  const supabase = await createClient()
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
 
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
+  try {
+    await signIn('credentials', {
+      email,
+      password,
+      redirectTo: '/dashboard'
+    })
+  } catch (error: any) {
+    if (error?.type === 'CredentialsSignin' || error?.message?.includes('CredentialsSignin')) {
+      redirect('/login?message=' + encodeURIComponent('Invalid email or password'))
+    }
+    // Next.js redirect throws error intentionally
+    throw error
   }
-
-  const { error } = await supabase.auth.signInWithPassword(data)
-
-  if (error) {
-    redirect('/login?message=' + encodeURIComponent(error.message))
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient()
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  const name = (formData.get('name') as string) || 'Farm Owner'
 
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-    options: {
-      data: {
-        name: formData.get('name') as string,
-      }
-    }
+  const [existingUser] = await db.select().from(profiles).where(eq(profiles.email, email)).limit(1)
+
+  if (existingUser) {
+    redirect('/login?message=' + encodeURIComponent('An account with this email already exists.'))
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const hashedPassword = await bcrypt.hash(password, 10)
 
-  if (error) {
-    redirect('/login?message=' + encodeURIComponent(error.message))
-  }
+  await db.insert(profiles).values({
+    email,
+    name,
+    currency: 'BDT',
+    passwordHash: hashedPassword
+  })
 
-  revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  await signIn('credentials', {
+    email,
+    password,
+    redirectTo: '/dashboard'
+  })
 }
 
 export async function forgotPassword(formData: FormData) {
-  const supabase = await createClient()
-  const email = formData.get('email') as string
-  const origin = (await headers()).get('origin')
-
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
+  return { error: 'Password reset links require an SMTP configuration on your home server.' }
 }
 
 export async function resetPassword(formData: FormData) {
-  const supabase = await createClient()
-  const password = formData.get('password') as string
-
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  revalidatePath('/', 'layout')
+  return { error: 'Password reset disabled for self-hosted mode.' }
 }

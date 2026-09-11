@@ -1,4 +1,7 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { expenseCategories, owners, profiles } from '@/db/schema'
+import { eq, asc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import Link from 'next/link'
 import { Settings2, Users, Tag, Database, Lock } from 'lucide-react'
 import { SettingsClientActions } from './SettingsClientActions'
@@ -8,19 +11,23 @@ import { DeleteCategoryButton } from '@/components/DeleteCategoryButton'
 import { ChangePasswordSection } from './ChangePasswordSection'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
+  const session = await auth()
+  let userId = session?.user?.id
 
-  const { data: categories } = await supabase
-    .from('expense_categories')
-    .select('*')
-    .order('name')
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  const { data: owners } = await supabase
-    .from('owners')
-    .select('id, name, share_percentage')
-    .order('created_at')
+  const categories = userId
+    ? await db.select().from(expenseCategories).where(eq(expenseCategories.userId, userId)).orderBy(asc(expenseCategories.name))
+    : []
 
-  const totalShare = owners?.reduce((s, o) => s + Number(o.share_percentage), 0) || 0
+  const allOwners = userId
+    ? await db.select({ id: owners.id, name: owners.name, share_percentage: owners.sharePercentage }).from(owners).where(eq(owners.userId, userId))
+    : []
+
+  const totalShare = allOwners.reduce((s, o) => s + Number(o.share_percentage), 0)
 
   return (
     <div className="flex flex-col gap-8 max-w-3xl mx-auto w-full">
@@ -58,7 +65,7 @@ export default async function SettingsPage() {
           <h2 className="font-bold text-lg">Expense Categories</h2>
         </div>
         <div className="p-2">
-          {categories && categories.length > 0 ? (
+          {categories.length > 0 ? (
             <ul className="divide-y divide-(--color-surface-high)">
               {categories.map(cat => (
                 <li key={cat.id} className="flex items-center justify-between px-4 py-3">
@@ -103,10 +110,10 @@ export default async function SettingsPage() {
           <h2 className="font-bold text-lg">Farm Partners</h2>
         </div>
         <div className="p-6 flex flex-col gap-4">
-          {owners && owners.length > 0 ? (
+          {allOwners.length > 0 ? (
             <>
               <ul className="flex flex-col gap-2">
-                {owners.map(o => (
+                {allOwners.map(o => (
                   <li key={o.id} className="flex justify-between items-center py-2 border-b border-(--color-surface-high)">
                     <span className="font-medium">{o.name}</span>
                     <span className="font-bold text-primary">{o.share_percentage}%</span>

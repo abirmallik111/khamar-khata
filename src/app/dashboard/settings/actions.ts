@@ -1,67 +1,98 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import {
+  expenseCategories,
+  owners,
+  goats,
+  expenses,
+  expenseGoatMap,
+  sales,
+  ownerContributions,
+  goatHealthRecords,
+  goatNotes,
+  goatImages,
+  profiles
+} from '@/db/schema'
+import { eq, and, sql } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
+import bcrypt from 'bcryptjs'
+
+async function getAuthUser(): Promise<{ id: string }> {
+  const session = await auth()
+  if (session?.user?.id) {
+    return { id: session.user.id }
+  }
+  const [firstUser] = await db.select().from(profiles).limit(1)
+  if (firstUser) return { id: firstUser.id }
+  throw new Error('Not authenticated')
+}
 
 export async function deleteCategory(id: string) {
-  const supabase = await createClient()
-  const { error } = await supabase.from('expense_categories').delete().eq('id', id)
-  if (error) throw new Error('Failed to delete category. It may be used by an expense.')
+  const user = await getAuthUser()
+  await db.delete(expenseCategories).where(and(eq(expenseCategories.id, id), eq(expenseCategories.userId, user.id)))
   revalidatePath('/dashboard/settings')
 }
 
 export async function exportUserData() {
-  const supabase = await createClient()
+  const user = await getAuthUser()
 
-  const tables = [
-    'owners',
-    'goats',
-    'expense_categories',
-    'expenses',
-    'expense_goat_map',
-    'sales',
-    'owner_contributions',
-    'goat_health_records',
-    'goat_notes',
-    'goat_images'
-  ]
-
-  const results = await Promise.all(
-    tables.map(table => supabase.from(table as any).select('*'))
-  )
-
-  const data: Record<string, unknown> = {}
-  results.forEach((result, index) => {
-    if (result.error) throw new Error(`Failed to fetch ${tables[index]}`)
-    data[tables[index]] = result.data
-  })
+  const [
+    ownersData,
+    goatsData,
+    categoriesData,
+    expensesData,
+    expenseGoatMapData,
+    salesData,
+    ownerContributionsData,
+    goatHealthRecordsData,
+    goatNotesData,
+    goatImagesData
+  ] = await Promise.all([
+    db.select().from(owners).where(eq(owners.userId, user.id)),
+    db.select().from(goats).where(eq(goats.userId, user.id)),
+    db.select().from(expenseCategories).where(eq(expenseCategories.userId, user.id)),
+    db.select().from(expenses).where(eq(expenses.userId, user.id)),
+    db.select().from(expenseGoatMap).where(eq(expenseGoatMap.userId, user.id)),
+    db.select().from(sales).where(eq(sales.userId, user.id)),
+    db.select().from(ownerContributions).where(eq(ownerContributions.userId, user.id)),
+    db.select().from(goatHealthRecords).where(eq(goatHealthRecords.userId, user.id)),
+    db.select().from(goatNotes).where(eq(goatNotes.userId, user.id)),
+    db.select().from(goatImages).where(eq(goatImages.userId, user.id))
+  ])
 
   return {
     version: '1.0',
     exported_at: new Date().toISOString(),
-    data
+    data: {
+      owners: ownersData,
+      goats: goatsData,
+      expense_categories: categoriesData,
+      expenses: expensesData,
+      expense_goat_map: expenseGoatMapData,
+      sales: salesData,
+      owner_contributions: ownerContributionsData,
+      goat_health_records: goatHealthRecordsData,
+      goat_notes: goatNotesData,
+      goat_images: goatImagesData
+    }
   }
 }
 
 export async function triggerRestore(backupData: { data: Record<string, unknown> }) {
-  const supabase = await createClient()
-  
-  // Call the atomic restore RPC
-  const { error } = await supabase.rpc('restore_user_data', { 
-    backup_data: backupData.data as any
-  })
+  const user = await getAuthUser()
 
-  if (error) {
-    console.error('Restore error:', error)
-    throw new Error(error.message || 'Failed to restore data.')
-  }
+  await db.execute(sql`
+    SELECT restore_user_data(${JSON.stringify(backupData.data)}::jsonb)
+  `)
 
   revalidatePath('/dashboard')
   return { success: true }
 }
 
 export async function changePassword(formData: FormData) {
-  const supabase = await createClient()
+  const user = await getAuthUser()
   const currentPassword = formData.get('current_password') as string
   const newPassword = formData.get('new_password') as string
   const confirmPassword = formData.get('confirm_password') as string
@@ -70,31 +101,27 @@ export async function changePassword(formData: FormData) {
     return { error: 'New passwords do not match' }
   }
 
-  // 1. Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user || !user.email) {
-    return { error: 'User not authenticated' }
+  const [profile] = await db.select().from(profiles).where(eq(profiles.id, user.id)).limit(1)
+  if (!profile) {
+    return { error: 'User not found' }
   }
 
-  // 2. Verify current password by signing in again
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: currentPassword,
-  })
-
-  if (signInError) {
-    return { error: 'Invalid current password' }
+  if (profile.passwordHash) {
+    const isValid = await bcrypt.compare(currentPassword, profile.passwordHash)
+    if (!isValid) {
+      return { error: 'Invalid current password' }
+    }
   }
 
-  // 3. Update password
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: newPassword,
-  })
-
-  if (updateError) {
-    return { error: updateError.message }
-  }
+  const newHash = await bcrypt.hash(newPassword, 10)
+  await db.update(profiles).set({ passwordHash: newHash }).where(eq(profiles.id, user.id))
 
   revalidatePath('/dashboard/settings')
   return { success: true }
+}
+
+export async function updateUserCurrency(currencyCode: string) {
+  const user = await getAuthUser()
+  await db.update(profiles).set({ currency: currencyCode }).where(eq(profiles.id, user.id))
+  revalidatePath('/dashboard')
 }

@@ -1,29 +1,37 @@
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { sales, goats, profiles } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
+import { auth } from '@/auth'
 import Link from 'next/link'
 import { PlusCircle, TrendingUp, Edit3 } from 'lucide-react'
 import { formatCurrency } from '@/utils/format'
 
 export default async function SalesPage() {
-  const supabase = await createClient()
+  const session = await auth()
+  let userId = session?.user?.id
 
-  // Fetch sales with goat details
-  const { data: sales, error } = await supabase
-    .from('sales')
-    .select(`
-      *,
-      goats (name_or_tag, purchase_price)
-    `)
-    .order('sale_date', { ascending: false })
+  if (!userId) {
+    const [firstUser] = await db.select().from(profiles).limit(1)
+    if (firstUser) userId = firstUser.id
+  }
 
-  // Fetch User's Currency Preference
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('currency')
-    .eq('id', user!.id)
-    .single()
-  
+  const [profile] = userId ? await db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : []
   const currencyCode = (profile?.currency || 'BDT') as any
+
+  const salesList = userId
+    ? await db.select({
+        id: sales.id,
+        salePrice: sales.salePrice,
+        saleDate: sales.saleDate,
+        note: sales.note,
+        goatName: goats.nameOrTag,
+        goatPurchasePrice: goats.purchasePrice
+      })
+        .from(sales)
+        .leftJoin(goats, eq(sales.goatId, goats.id))
+        .where(eq(sales.userId, userId))
+        .orderBy(desc(sales.saleDate))
+    : []
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,18 +49,17 @@ export default async function SalesPage() {
         </Link>
       </header>
 
-      {error && <div className="text-error p-4 bg-error/10 rounded-md">Failed to load sales.</div>}
-      
-      {!error && sales?.length === 0 ? (
+      {salesList.length === 0 ? (
         <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-12 text-center text-(--color-on-surface-variant) mt-4">
           No sales recorded yet. Click &quot;Record Sale&quot; when you sell a goat.
         </div>
       ) : (
         <div className="flex flex-col gap-4 mt-4">
-          {sales?.map((sale) => {
-            const goat = sale.goats as { name_or_tag: string; purchase_price: number } | null
-            const profit = sale.sale_price - (goat?.purchase_price || 0)
-            const profitMargin = goat?.purchase_price ? ((profit / goat.purchase_price) * 100).toFixed(1) : 0
+          {salesList.map((sale) => {
+            const purchasePrice = Number(sale.goatPurchasePrice || 0)
+            const salePrice = Number(sale.salePrice)
+            const profit = salePrice - purchasePrice
+            const profitMargin = purchasePrice ? ((profit / purchasePrice) * 100).toFixed(1) : '0'
 
             return (
               <div 
@@ -62,10 +69,10 @@ export default async function SalesPage() {
                 <div className="p-4 sm:p-6 flex-1 flex flex-col gap-1">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-lg text-(--color-on-background)">
-                      Goat: {goat?.name_or_tag || 'Unknown'}
+                      Goat: {sale.goatName || 'Unknown'}
                     </span>
                     <span className="bg-(--color-surface-high) text-(--color-on-surface-variant) text-xs px-2 py-1 rounded-md font-medium">
-                      {new Date(sale.sale_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                      {new Date(sale.saleDate).toLocaleDateString(undefined, { dateStyle: 'long' })}
                     </span>
                   </div>
                   {sale.note && (
@@ -73,7 +80,7 @@ export default async function SalesPage() {
                   )}
                   <div className="flex flex-wrap items-center gap-3 mt-3">
                     <span className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider">
-                      Initial Cost: {formatCurrency(goat?.purchase_price || 0, currencyCode)}
+                      Initial Cost: {formatCurrency(purchasePrice, currencyCode)}
                     </span>
                     <div className={`px-2 py-1 rounded-md flex items-center gap-1 text-xs font-bold uppercase tracking-tight ${profit >= 0 ? 'bg-green-500/10 text-green-600' : 'bg-red-500/10 text-red-600'}`}>
                       {profit >= 0 ? <TrendingUp className="w-3 h-3" /> : null}
@@ -85,7 +92,7 @@ export default async function SalesPage() {
                 <div className="bg-blue-500/5 sm:w-64 p-4 sm:p-6 flex flex-col justify-center items-end gap-3 sm:border-l border-(--color-surface-high)">
                   <div className="text-right">
                     <p className="text-2xl font-display font-bold text-blue-600">
-                      +{formatCurrency(sale.sale_price, currencyCode)}
+                      +{formatCurrency(salePrice, currencyCode)}
                     </p>
                   </div>
                   

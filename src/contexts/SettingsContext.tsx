@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { updateUserCurrency } from '@/app/dashboard/settings/actions'
 
 export type CurrencyCode = 'BDT' | 'INR' | 'USD' | 'EUR' | 'GBP' | 'SAR' | 'AED' | 'PKR' | 'MYR' | 'SGD'
 
@@ -45,45 +45,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [isSimpleMode, setIsSimpleMode] = useState(false)
   const [currency, setCurrency] = useState<CurrencyCode>('BDT')
   const [isLoaded, setIsLoaded] = useState(false)
-  const supabase = createClient()
 
-  // Load initial settings
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        // 1. Try local storage for immediate UI
-        const storedSimpleMode = localStorage.getItem('kk-simple-mode')
-        const storedCurrency = localStorage.getItem('kk-currency') as CurrencyCode
+    try {
+      const storedSimpleMode = localStorage.getItem('kk-simple-mode')
+      const storedCurrency = localStorage.getItem('kk-currency') as CurrencyCode
 
-        if (storedSimpleMode === 'true') setIsSimpleMode(true)
-        if (storedCurrency && CURRENCIES.find(c => c.code === storedCurrency)) {
-          setCurrency(storedCurrency)
-        }
-
-        // 2. Try Supabase if user is logged in
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('currency')
-            .eq('id', user.id)
-            .single()
-
-          if (profile?.currency) {
-            const remoteCurrency = profile.currency as CurrencyCode
-            setCurrency(remoteCurrency)
-            localStorage.setItem('kk-currency', remoteCurrency)
-          }
-        }
-      } catch (error) {
-        console.error('Error loading settings:', error)
-      } finally {
-        setIsLoaded(true)
+      if (storedSimpleMode === 'true') setIsSimpleMode(true)
+      if (storedCurrency && CURRENCIES.find(c => c.code === storedCurrency)) {
+        setCurrency(storedCurrency)
       }
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    } finally {
+      setIsLoaded(true)
     }
-
-    loadSettings()
-  }, [supabase])
+  }, [])
 
   const toggleSimpleMode = () => {
     setIsSimpleMode(prev => {
@@ -97,18 +74,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const updateCurrency = async (code: CurrencyCode) => {
     setCurrency(code)
-    localStorage.setItem('kk-currency', code)
-
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({ currency: code })
-          .eq('id', user.id)
-      }
+      localStorage.setItem('kk-currency', code)
+      await updateUserCurrency(code)
     } catch (error) {
-      console.error('Error updating currency in DB:', error)
+      console.error('Error updating currency:', error)
     }
   }
 

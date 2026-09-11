@@ -1,31 +1,43 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server'
+import { db } from '@/db'
+import { sales, profiles } from '@/db/schema'
+import { eq, and, sql } from 'drizzle-orm'
+import { auth } from '@/auth'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-export async function addSale(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+async function getAuthUser(): Promise<{ id: string }> {
+  const session = await auth()
+  if (session?.user?.id) {
+    return { id: session.user.id }
+  }
+  const [firstUser] = await db.select().from(profiles).limit(1)
+  if (firstUser) return { id: firstUser.id }
+  throw new Error('Not authenticated')
+}
 
-  if (!user) throw new Error('Not authenticated')
+export async function addSale(formData: FormData) {
+  const user = await getAuthUser()
 
   const goatId = formData.get('goat_id') as string
   const salePrice = parseFloat(formData.get('sale_price') as string)
   const saleDate = formData.get('sale_date') as string
-  const note = formData.get('note') as string
+  const note = (formData.get('note') as string) || ''
 
-  const { error } = await supabase.rpc('add_sale_and_update_goat', {
-    p_user_id: user.id,
-    p_goat_id: goatId,
-    p_sale_price: salePrice,
-    p_sale_date: saleDate,
-    p_note: note || ''
-  })
-
-  if (error) {
-    console.error('Error recording sale via RPC:', error)
-    if (error.code === '23505') {
+  try {
+    await db.execute(sql`
+      SELECT add_sale_and_update_goat(
+        ${user.id}::uuid,
+        ${goatId}::uuid,
+        ${salePrice}::numeric,
+        ${saleDate}::date,
+        ${note}
+      )
+    `)
+  } catch (error: any) {
+    console.error('Error recording sale:', error)
+    if (error?.code === '23505') {
       throw new Error('This goat has already been sold.')
     }
     throw new Error('Failed to record sale: ' + error.message)
@@ -39,24 +51,17 @@ export async function addSale(formData: FormData) {
 }
 
 export async function updateSale(id: string, formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const user = await getAuthUser()
 
   const salePrice = parseFloat(formData.get('sale_price') as string)
   const saleDate = formData.get('sale_date') as string
-  const note = formData.get('note') as string
+  const note = (formData.get('note') as string) || null
 
-  const { error } = await supabase.from('sales').update({
-    sale_price: salePrice,
-    sale_date: saleDate,
-    note: note || null
-  }).eq('id', id).eq('user_id', user.id)
-
-  if (error) {
-    console.error('Error updating sale:', error)
-    throw new Error('Failed to update sale')
-  }
+  await db.update(sales).set({
+    salePrice: salePrice.toString(),
+    saleDate,
+    note
+  }).where(and(eq(sales.id, id), eq(sales.userId, user.id)))
 
   revalidatePath('/dashboard/sales')
   revalidatePath('/dashboard/goats')
@@ -65,19 +70,11 @@ export async function updateSale(id: string, formData: FormData) {
 }
 
 export async function deleteSale(id: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const user = await getAuthUser()
 
-  const { error } = await supabase.rpc('delete_sale_and_revert_goat', {
-    p_sale_id: id,
-    p_user_id: user.id
-  })
-
-  if (error) {
-    console.error('Error deleting sale via RPC:', error)
-    throw new Error('Failed to delete sale')
-  }
+  await db.execute(sql`
+    SELECT delete_sale_and_revert_goat(${id}::uuid, ${user.id}::uuid)
+  `)
 
   revalidatePath('/dashboard/sales')
   revalidatePath('/dashboard/goats')

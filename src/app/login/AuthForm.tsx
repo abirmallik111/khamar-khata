@@ -161,7 +161,7 @@ export function AuthForm({ message }: { message?: string }) {
       </div>
       
       <p className="text-center mt-10 text-(--color-on-surface-variant) text-sm font-medium">
-        Secure authentication powered by <span className="text-primary font-bold">Supabase</span>
+        Secure authentication powered by <span className="text-primary font-bold">Khamar Khata Self-Hosted</span>
       </p>
     </div>
   )

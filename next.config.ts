@@ -12,23 +12,12 @@ const withPWA = withPWAInit({
   workboxOptions: {
     runtimeCaching: [
       {
-        urlPattern: /^https:\/\/lfuwowkkwulmbkgirkch\.supabase\.co\/rest\/v1\/.*/,
-        handler: 'StaleWhileRevalidate',
-        options: {
-          cacheName: 'supabase-api-data',
-          expiration: {
-            maxEntries: 100,
-            maxAgeSeconds: 24 * 60 * 60 // 24 hours
-          }
-        }
-      },
-      {
-        urlPattern: /^https:\/\/lfuwowkkwulmbkgirkch\.supabase\.co\/storage\/v1\/object\/public\/.*/,
+        urlPattern: /\/uploads\/.*/,
         handler: 'CacheFirst',
         options: {
-          cacheName: 'supabase-images',
+          cacheName: 'local-uploads',
           expiration: {
-            maxEntries: 50,
+            maxEntries: 100,
             maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
           }
         }
@@ -38,16 +27,11 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {},
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'lfuwowkkwulmbkgirkch.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-    ],
-  },
+    unoptimized: true
+  }
 };
 
 export default withPWA(nextConfig);
