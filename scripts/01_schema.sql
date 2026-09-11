@@ -544,3 +544,42 @@ BEGIN
     RETURN QUERY SELECT FALSE, 'LOW', NULL::TEXT, 'No direct inbreeding detected in recent generations';
 END;
 $$ LANGUAGE plpgsql;
+
+-- 5.9 Get Partner Equity Report Procedure
+CREATE OR REPLACE FUNCTION get_partner_equity_report(
+    p_user_id UUID
+) RETURNS TABLE (
+    owner_id UUID,
+    owner_name TEXT,
+    share_percentage NUMERIC,
+    total_investment NUMERIC,
+    realized_profit NUMERIC,
+    active_asset_cost NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.id AS owner_id,
+        o.name AS owner_name,
+        COALESCE(o.share_percentage, 0)::NUMERIC AS share_percentage,
+        COALESCE((
+            SELECT SUM(oc.amount) 
+            FROM owner_contributions oc 
+            WHERE oc.owner_id = o.id AND oc.user_id = p_user_id
+        ), 0)::NUMERIC AS total_investment,
+        COALESCE((
+            SELECT SUM(s.sale_price * (o.share_percentage / 100.0))
+            FROM sales s
+            WHERE s.user_id = p_user_id
+        ), 0)::NUMERIC AS realized_profit,
+        COALESCE((
+            SELECT SUM(g.purchase_price * (o.share_percentage / 100.0))
+            FROM goats g
+            WHERE g.user_id = p_user_id AND g.status IN ('active', 'sick')
+        ), 0)::NUMERIC AS active_asset_cost
+    FROM owners o
+    WHERE o.user_id = p_user_id
+    ORDER BY o.created_at ASC;
+END;
+$$ LANGUAGE plpgsql;
+
