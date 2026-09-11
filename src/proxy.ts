@@ -3,16 +3,17 @@ import { auth } from '@/auth';
 
 export async function proxy(request: NextRequest) {
   const session = await auth();
-  const isDashboard = request.nextUrl.pathname.startsWith('/dashboard');
-  const isLoginPage = request.nextUrl.pathname === '/login';
+  const pathname = request.nextUrl.pathname;
+  const isDashboard = pathname.startsWith('/dashboard');
+  const isLoginPage = pathname === '/login';
 
   if (isDashboard && !session?.user) {
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/khamar_khata/login', request.url);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isLoginPage && session?.user) {
-    const dashboardUrl = new URL('/dashboard', request.url);
+    const dashboardUrl = new URL('/khamar_khata/dashboard', request.url);
     return NextResponse.redirect(dashboardUrl);
   }
 

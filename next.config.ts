@@ -27,6 +27,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  basePath: "/khamar_khata",
   output: "standalone",
   turbopack: {},
   images: {

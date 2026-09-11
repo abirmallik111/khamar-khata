@@ -6,6 +6,8 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  basePath: '/khamar_khata/api/auth',
+  trustHost: true,
   providers: [
     Credentials({
       name: 'Credentials',
