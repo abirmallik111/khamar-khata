@@ -6,6 +6,7 @@ import { Lock, ShieldCheck, CheckCircle2 } from 'lucide-react'
 import { resetPassword } from '../login/actions'
 import { SubmitButton } from '@/components/SubmitButton'
 import Link from 'next/link'
+import logoImg from '../../../public/logo-final.png'
 
 export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
@@ -39,7 +40,7 @@ export default function ResetPasswordPage() {
         <div className="flex flex-col items-center justify-center gap-4 mb-10">
           <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-primary/20 shadow-xl bg-white">
             <Image 
-              src="/logo-final.png" 
+              src={logoImg} 
               alt="Khamar Khata Logo" 
               fill
               className="object-cover"

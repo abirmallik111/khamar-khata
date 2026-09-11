@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { LogOut } from 'lucide-react'
 import { SidebarLinks, BottomNav } from '@/components/DashboardNav'
 import { QuickActionsFAB } from '@/components/QuickActionsFAB'
+import logoImg from '../../../public/logo-final.png'
 
 export default async function DashboardLayout({
   children,
@@ -25,7 +26,7 @@ export default async function DashboardLayout({
         <Link href="/dashboard" className="flex items-center gap-3 mb-8 px-2 hover:opacity-80 transition-opacity">
           <div className="relative w-12 h-12 overflow-hidden rounded-full border-2 border-(--color-primary)/20 shadow-sm">
             <Image 
-              src="/logo-final.png" 
+              src={logoImg} 
               alt="Khamar Khata Logo" 
               fill
               className="object-cover"
@@ -56,7 +57,7 @@ export default async function DashboardLayout({
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="relative w-10 h-10 overflow-hidden rounded-full border border-(--color-primary)/20">
               <Image 
-                src="/logo-final.png" 
+                src={logoImg} 
                 alt="Logo" 
                 fill
                 className="object-cover"

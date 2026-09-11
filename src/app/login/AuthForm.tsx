@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { login, signup } from './actions'
 import { User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { SubmitButton } from '@/components/SubmitButton'
+import logoImg from '../../../public/logo-final.png'
 
 export function AuthForm({ message }: { message?: string }) {
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login')
@@ -33,7 +34,7 @@ export function AuthForm({ message }: { message?: string }) {
       <div className="flex flex-col items-center justify-center gap-4 mb-10">
         <div className="relative w-24 h-24 overflow-hidden rounded-full border-4 border-primary/20 shadow-xl bg-white">
           <Image 
-            src="/logo-final.png" 
+            src={logoImg} 
             alt="Khamar Khata Logo" 
             fill
             className="object-cover"
