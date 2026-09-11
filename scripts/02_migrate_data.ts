@@ -1,81 +1,225 @@
 /**
  * KHAMAR KHATA - DATA MIGRATION SCRIPT
- * Pulls existing records from managed Supabase (lfuwowkkwulmbkgirkch)
- * and inserts them into target PostgreSQL database.
- * 
- * Usage:
- *   1. Ensure target DB schema is applied: psql $TARGET_DATABASE_URL -f scripts/01_schema.sql
- *   2. Run: npx tsx scripts/02_migrate_data.ts
+ * Inserts all extracted records from Supabase into target PostgreSQL database.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { Client } from 'pg';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://lfuwowkkwulmbkgirkch.supabase.co';
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxmdXdvd2trd3VsbWJrZ2lya2NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2Mjg2MDYsImV4cCI6MjA5MjIwNDYwNn0.aNyRBt897vTuH6aUBUBUyUpTYu0m4pIlkx2x6w62rac';
+import postgres from 'postgres';
 
 const TARGET_DB_URL = process.env.DATABASE_URL || 'postgresql://shenron:abirmallik76922247@192.168.1.8:5432/main_db';
+const sql = postgres(TARGET_DB_URL);
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const pgClient = new Client({ connectionString: TARGET_DB_URL });
-
-const TABLES = [
-  'profiles',
-  'expense_categories',
-  'goats',
-  'expenses',
-  'expense_goat_map',
-  'sales',
-  'owners',
-  'owner_contributions',
-  'goat_health_records',
-  'goat_notes',
-  'goat_images'
-];
+const DATA_PAYLOAD: Record<string, any[]> = {
+  profiles: [
+    {"id":"037db256-d084-4b1e-b95b-f69c32066148","name":"abirtesting","created_at":"2026-04-20T12:22:56.222978+00:00","currency":"BDT"},
+    {"id":"1b91be72-6f4c-4d68-b73a-be4eb16b5784","name":"farista agro","created_at":"2026-04-22T05:06:55.547591+00:00","currency":"BDT"},
+    {"id":"e5b7131a-0f9a-424f-a0c8-9f5e4c8b4978","name":"Shahriar ","created_at":"2026-04-22T05:14:05.211888+00:00","currency":"BDT"},
+    {"id":"2568477f-02da-48df-8bce-92fb253d28fb","name":"MD Abir Mallik","created_at":"2026-04-19T22:24:39.02012+00:00","currency":"BDT"}
+  ],
+  expense_categories: [
+    {"id":"47f39d9f-7b35-4ef7-959a-42c748bdabc2","name":"Other","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","created_at":"2026-04-22T09:43:36.36954+00:00"},
+    {"id":"74b2d121-dadc-429f-8ca8-04a424d85c3d","name":"Breed","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","created_at":"2026-04-22T09:49:09.81544+00:00"},
+    {"id":"6fdf7d00-39d6-4b95-a5ac-959a621d2ec5","name":"Doctor","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","created_at":"2026-04-22T09:55:50.171068+00:00"},
+    {"id":"0319eae9-fe5d-4fe3-86a8-7014dab714f3","name":"Feed","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","created_at":"2026-04-22T09:59:37.986389+00:00"},
+    {"id":"c56bf48b-c304-433c-a0ba-30e387ec7deb","name":"Other","user_id":"037db256-d084-4b1e-b95b-f69c32066148","created_at":"2026-04-22T09:43:36.36954+00:00"},
+    {"id":"5fc46b09-3d05-4d93-a450-882608a328ee","name":"Breed","user_id":"037db256-d084-4b1e-b95b-f69c32066148","created_at":"2026-04-22T09:49:09.81544+00:00"},
+    {"id":"ec7b14c7-cb45-4b4b-b095-7e9e71f139c7","name":"Doctor","user_id":"037db256-d084-4b1e-b95b-f69c32066148","created_at":"2026-04-22T09:55:50.171068+00:00"},
+    {"id":"38019a94-2ac8-4a3c-935d-ebc4b48188fe","name":"Feed","user_id":"037db256-d084-4b1e-b95b-f69c32066148","created_at":"2026-04-22T09:59:37.986389+00:00"}
+  ],
+  goats: [
+    {"id":"44243960-78e9-40b7-8cd7-265e8975da50","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"BORODA 1 number","breed":null,"gender":"Female","purchase_price":7000,"purchase_date":"2025-05-27","status":"sold","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.9230641218518607.jpg","created_at":"2026-04-22T09:29:27.797882+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"a954b4d4-648c-456f-ae94-51ea462832bb","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"kala 2 number","breed":null,"gender":"Female","purchase_price":6000,"purchase_date":"2025-07-14","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.22019430543521212.jpg","created_at":"2026-04-22T09:30:40.146402+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"lal fot fot 3 number","breed":null,"gender":"Female","purchase_price":7000,"purchase_date":"2025-09-11","status":"sick","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.5923704495855384.jpg","created_at":"2026-04-22T09:35:17.469162+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"first Khashi 4 number","breed":null,"gender":"Male","purchase_price":6500,"purchase_date":"2025-11-19","status":"sick","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.7096074942159055.jpg","created_at":"2026-04-22T09:38:03.464888+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"9ee33031-aa87-45fe-9718-aae7e8bc49de","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"Sada Kala Khashi 5 number","breed":null,"gender":"Male","purchase_price":7300,"purchase_date":"2025-12-07","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.8330794709951141.jpg","created_at":"2026-04-22T09:39:20.117744+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"kala 2 number","breed":null,"gender":"Female","purchase_price":6000,"purchase_date":"2025-07-14","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.22019430543521212.jpg","created_at":"2026-04-22T09:30:40.146402+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"Sada Kala Khashi 5 number","breed":null,"gender":"Male","purchase_price":7300,"purchase_date":"2025-12-07","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.8330794709951141.jpg","created_at":"2026-04-22T09:39:20.117744+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"BORODA 1 number","breed":null,"gender":"Female","purchase_price":7000,"purchase_date":"2025-05-27","status":"sold","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.9230641218518607.jpg","created_at":"2026-04-22T09:29:27.797882+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"71ea627e-cb05-4400-a27a-8c07c251b4a2","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"khashi 6 number","breed":null,"gender":"Male","purchase_price":7000,"purchase_date":"2026-01-12","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.5136686916760889.jpg","created_at":"2026-04-22T09:40:42.281752+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"2535289f-b1d5-4083-915b-c6a66f3daa8a","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name_or_tag":"baccha_1 7 Number","breed":null,"gender":"Female","purchase_price":0,"purchase_date":"2026-03-15","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.9770574179042113.jpg","created_at":"2026-04-22T09:41:45.791496+00:00","source":"born","mother_id":"a954b4d4-648c-456f-ae94-51ea462832bb","father_id":null,"updated_at":"2026-05-03T11:15:19.438679+00:00"},
+    {"id":"c38e8a74-9100-47b3-bded-796bfc94c711","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"lal fot fot 3 number","breed":null,"gender":"Female","purchase_price":7000,"purchase_date":"2025-09-11","status":"sold","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.5923704495855384.jpg","created_at":"2026-04-22T09:35:17.469162+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"first Khashi 4 number","breed":null,"gender":"Male","purchase_price":6500,"purchase_date":"2025-11-19","status":"sold","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.7096074942159055.jpg","created_at":"2026-04-22T09:38:03.464888+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-05-03T11:15:04.473821+00:00"},
+    {"id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"baccha_1 7 Number","breed":null,"gender":"Female","purchase_price":0,"purchase_date":"2026-03-15","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.5332703478989473.jpg","created_at":"2026-04-22T09:41:45.791496+00:00","source":"born","mother_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","father_id":null,"updated_at":"2026-06-17T16:52:46.606763+00:00"},
+    {"id":"649bd9f4-0804-4fc6-97d1-450e7710013e","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name_or_tag":"khashi 6 number","breed":null,"gender":"Male","purchase_price":7000,"purchase_date":"2026-01-12","status":"active","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb-0.9729896766279714.jpg","created_at":"2026-04-22T09:40:42.281752+00:00","source":"purchased","mother_id":null,"father_id":null,"updated_at":"2026-08-07T04:44:57.732472+00:00"}
+  ],
+  expenses: [
+    {"id":"389d79f2-400e-4c32-af5a-49919fd96dbc","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":2000,"category_id":"74b2d121-dadc-429f-8ca8-04a424d85c3d","expense_date":"2025-08-11","note":"breeding er jonno khoroch","created_at":"2026-04-22T09:55:02.576264+00:00","paid_amount":2000,"payment_status":"paid","due_amount":0},
+    {"id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":1040,"category_id":"6fdf7d00-39d6-4b95-a5ac-959a621d2ec5","expense_date":"2026-04-06","note":"all check up","created_at":"2026-04-22T09:59:19.764257+00:00","paid_amount":1040,"payment_status":"paid","due_amount":0},
+    {"id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":2000,"category_id":"47f39d9f-7b35-4ef7-959a-42c748bdabc2","expense_date":"2026-04-05","note":"previous khabar, bushi and related cost hishab","created_at":"2026-04-22T09:48:37.375734+00:00","paid_amount":2000,"payment_status":"paid","due_amount":0},
+    {"id":"5ab6d0e2-7816-4415-ad06-447bee36a428","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":4000,"category_id":"0319eae9-fe5d-4fe3-86a8-7014dab714f3","expense_date":"2026-04-06","note":"abba paibo 4000 taka","created_at":"2026-04-22T10:01:52.668293+00:00","paid_amount":0,"payment_status":"due","due_amount":4000},
+    {"id":"6251eef2-ccc7-40de-96c4-20ff19a93b3b","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":1000,"category_id":"0319eae9-fe5d-4fe3-86a8-7014dab714f3","expense_date":"2026-04-08","note":"boroda re eid er prostuti","created_at":"2026-04-22T10:03:19.773346+00:00","paid_amount":1000,"payment_status":"paid","due_amount":0},
+    {"id":"25db13b3-dd18-4b68-98c8-12c101cfe677","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","amount":200,"category_id":"0319eae9-fe5d-4fe3-86a8-7014dab714f3","expense_date":"2026-04-06","note":"vushi pata","created_at":"2026-04-22T10:00:09.027656+00:00","paid_amount":200,"payment_status":"paid","due_amount":0},
+    {"id":"f3d05817-3f89-463d-8251-af2a68932188","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":2000,"category_id":"5fc46b09-3d05-4d93-a450-882608a328ee","expense_date":"2025-08-11","note":"breeding er jonno khoroch","created_at":"2026-04-22T09:55:02.576264+00:00","paid_amount":2000,"payment_status":"paid","due_amount":0},
+    {"id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":1040,"category_id":"ec7b14c7-cb45-4b4b-b095-7e9e71f139c7","expense_date":"2026-04-06","note":"all check up","created_at":"2026-04-22T09:59:19.764257+00:00","paid_amount":1040,"payment_status":"paid","due_amount":0},
+    {"id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":2000,"category_id":"c56bf48b-c304-433c-a0ba-30e387ec7deb","expense_date":"2026-04-05","note":"previous khabar, bushi and related cost hishab","created_at":"2026-04-22T09:48:37.375734+00:00","paid_amount":2000,"payment_status":"paid","due_amount":0},
+    {"id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":4000,"category_id":"38019a94-2ac8-4a3c-935d-ebc4b48188fe","expense_date":"2026-04-06","note":"abba paibo 4000 taka","created_at":"2026-04-22T10:01:52.668293+00:00","paid_amount":0,"payment_status":"due","due_amount":4000},
+    {"id":"1ad78ede-7c79-42e5-9da0-3595c5490d23","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":1000,"category_id":"38019a94-2ac8-4a3c-935d-ebc4b48188fe","expense_date":"2026-04-08","note":"boroda re eid er prostuti","created_at":"2026-04-22T10:03:19.773346+00:00","paid_amount":1000,"payment_status":"paid","due_amount":0},
+    {"id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","user_id":"037db256-d084-4b1e-b95b-f69c32066148","amount":200,"category_id":"38019a94-2ac8-4a3c-935d-ebc4b48188fe","expense_date":"2026-04-06","note":"vushi pata","created_at":"2026-04-22T10:00:09.027656+00:00","paid_amount":200,"payment_status":"paid","due_amount":0}
+  ],
+  expense_goat_map: [
+    {"id":"f7e2f301-0677-4c99-927d-a6724300991a","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"389d79f2-400e-4c32-af5a-49919fd96dbc","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"83dab6fb-1cd6-4395-9147-b1f6d256ccde","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"389d79f2-400e-4c32-af5a-49919fd96dbc","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"e1e762d9-5ccc-4fe1-aa02-1e1a1526abe1","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"409664a7-b508-47c1-8b5a-12d45d5b5e21","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"52dd0f4f-9b3f-4cd2-835a-54b4915e01cc","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"990e5a19-dddd-4063-b28c-92cf5e32e193","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"},
+    {"id":"a5473277-249e-4354-91e4-465d5d82f902","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"9fe7a019-890b-4aac-8c0a-f1ee83b27ef7","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"3ae30cb0-6165-4063-89c6-77679e845f48","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"92b28558-376e-4042-9e8e-2df762ee8723","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"77255573-e1a3-4c29-856d-0fe1cdcc83aa","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"14ef3c7e-2700-430c-abcf-beebf64ac7d0","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"},
+    {"id":"ea303021-6b09-40e1-b8ca-8a8fe3241418","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"1ff0c6e2-978c-4652-a8e6-e3b1970e86ed","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"595102d8-2e2e-4c02-b1c0-34fdb7401362","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"4a970837-ee97-492b-ad77-d825677d09b9","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"3156e648-cc19-439c-9d6d-d3afba432524","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"39ad4045-62f5-4e77-80d0-8cbe971b896f","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"},
+    {"id":"675815ab-355f-4a90-a37f-253f5e3d7299","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"59a9e8cf-13ca-43e1-9174-4c531d4d892e","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"5ab6d0e2-7816-4415-ad06-447bee36a428","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"0c0f3927-113a-4e27-8137-d7366e21b2bb","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"6251eef2-ccc7-40de-96c4-20ff19a93b3b","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"1de4cff8-3010-43a3-903e-f4d2aceb6589","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"3cc5cdb2-0b7a-48ea-9dea-c0e2c901199c","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"c125b004-a8e1-4994-9021-bf1c293d43a2","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"3bdf047e-b20a-4ffc-9d66-e39095a2b7cf","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"},
+    {"id":"aa73332d-a2ea-4b09-a4de-4f9a60fb59f0","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"3e6860db-398c-47da-88b1-18762f885189","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"7f9699a0-1667-4ad0-a98b-e1411655644f","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"f3d05817-3f89-463d-8251-af2a68932188","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"94b88aa4-a542-4948-8471-84cab299f0d8","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"f3d05817-3f89-463d-8251-af2a68932188","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"e8ba10ba-ff53-4d03-bd9d-ea3cb7c5e670","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"ea39aa41-9417-41c7-8502-f7d5a940bc32","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"fec0ee0d-6cbd-4744-9949-d01590ff5f5a","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"5352d973-91bd-4098-a15d-23fa3283dc29","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"55a6f175-84c3-4fc4-967a-648860495716","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"a0b800ab-b863-40b1-9c47-112f1b678c76","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"},
+    {"id":"1b6d645f-9bd5-4545-9435-83819def679c","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"fb062ed7-7b11-4369-9213-7e82f418a227","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"ce4e5c00-12e1-4655-b704-ca1db4d67444","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"c74f1eda-7483-4220-b47b-d76a3366c212","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"abe5bfb9-65a0-4495-a14c-579488a2fbd4","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"a084bdbc-1767-4229-a945-91da05a999f3","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"},
+    {"id":"583336cf-8784-47c0-8287-398433e23653","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"c0e899f1-4e1e-4ee1-8eed-e7f2124d08cd","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"01f43f5b-03c4-401b-b0ad-14b496507177","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"5aaed171-2f88-4aa2-b7a3-1c0cc4883b6b","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"de1cbdca-467f-4889-aaca-978dcf760b95","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"0f5aafcf-1e2f-4fe8-86c3-d5c5c3ced5ab","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"92a6bfe3-9753-4f34-8942-dd0d6409c1b0","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"},
+    {"id":"b104ff76-2651-4954-a029-6ed9118b090c","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"1ad78ede-7c79-42e5-9da0-3595c5490d23","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"216faf74-0f6b-4ab8-8930-ad3de2d4d274","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"79835535-ba3d-4b53-8216-a19dec7638e2","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"0f6e1c04-b3ed-4fcf-acc3-5ea51c6da7a7","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"7a770d6d-8bbb-4153-b63d-c87330dfa948","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"c46e93e1-1c90-4187-a60b-25c27853da79","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"531a6bb6-57b3-470a-abfe-35e73bb942da","user_id":"037db256-d084-4b1e-b95b-f69c32066148","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"}
+  ],
+  sales: [
+    {"id":"f81d4541-d64b-4109-beaf-7dd00113dc95","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","sale_price":17000,"sale_date":"2026-04-29","note":"","created_at":"2026-04-29T04:46:40.868862+00:00"},
+    {"id":"0a5b1b32-bd79-4962-b06c-ea9512c43205","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50","user_id":"037db256-d084-4b1e-b95b-f69c32066148","sale_price":17000,"sale_date":"2026-04-29","note":"","created_at":"2026-04-29T04:46:40.868862+00:00"},
+    {"id":"53b142bd-a51e-4772-b3b2-4999042e2374","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","sale_price":7000,"sale_date":"2026-05-13","note":"bepari","created_at":"2026-05-13T11:39:15.436993+00:00"},
+    {"id":"7ab8872b-660c-44e3-9458-e29dd8c5703e","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","sale_price":6000,"sale_date":"2026-05-13","note":"bepari","created_at":"2026-05-13T11:39:44.346715+00:00"}
+  ],
+  owners: [
+    {"id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name":"Shahriar Rahman Badhon","share_percentage":50,"created_at":"2026-04-20T20:31:32.396229+00:00"},
+    {"id":"08055716-948b-436c-8503-053507063fab","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","name":"MD Abir Mallik","share_percentage":50,"created_at":"2026-04-20T20:31:37.016983+00:00"},
+    {"id":"d37bddf0-95a7-4319-8e43-70bfff794213","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name":"Shahriar Rahman Badhon","share_percentage":50,"created_at":"2026-04-20T20:31:32.396229+00:00"},
+    {"id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","user_id":"037db256-d084-4b1e-b95b-f69c32066148","name":"MD Abir Mallik","share_percentage":50,"created_at":"2026-04-20T20:31:37.016983+00:00"}
+  ],
+  owner_contributions: [
+    {"id":"8db71f32-5140-46a8-9354-2a7ff03471df","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:29:27.797882+00:00","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"3314fe37-8ab9-4932-8d46-cee59c95fdff","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:29:27.797882+00:00","goat_id":"d39e7562-a7cc-40c7-aa0a-6728865fe2ac"},
+    {"id":"5b8408f5-d91b-4704-a2a5-ed630b64dcdb","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3000,"created_at":"2026-04-22T09:30:40.146402+00:00","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"eb6b4c0a-f34b-4606-8418-a151b5730d36","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3000,"created_at":"2026-04-22T09:30:40.146402+00:00","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907"},
+    {"id":"9d9f8d08-2cc9-4f04-a3c7-35b1350926e5","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3650,"created_at":"2026-04-22T09:39:20.117744+00:00","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"ecdc87f4-1e5f-4109-8e59-d9b3f0d3fd6a","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3650,"created_at":"2026-04-22T09:39:20.117744+00:00","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395"},
+    {"id":"c972e5df-6b31-428a-8c27-2086b21cff4b","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":"389d79f2-400e-4c32-af5a-49919fd96dbc","amount":1000,"created_at":"2026-04-22T09:55:02.576264+00:00","goat_id":null},
+    {"id":"c4ce82a7-a1e1-426c-9e2f-6f48f2a6960c","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":"389d79f2-400e-4c32-af5a-49919fd96dbc","amount":1000,"created_at":"2026-04-22T09:55:02.576264+00:00","goat_id":null},
+    {"id":"56415437-a954-4878-9a1f-3ac224a155b7","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","amount":520,"created_at":"2026-04-22T09:59:19.764257+00:00","goat_id":null},
+    {"id":"0d06c640-6ae6-45b1-b74d-32f1e917673a","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":"6dc2e166-324b-46e8-9e00-17d3a8b49a2e","amount":520,"created_at":"2026-04-22T09:59:19.764257+00:00","goat_id":null},
+    {"id":"2d8226f3-a45c-4539-88e5-5e4305f05518","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","amount":1000,"created_at":"2026-04-22T10:00:59.502219+00:00","goat_id":null},
+    {"id":"c17200b7-ff9f-49ba-bdb6-94a24aacf642","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":"a4421e14-2fa0-4c6b-8547-f30a3b18f4af","amount":1000,"created_at":"2026-04-22T10:00:59.502219+00:00","goat_id":null},
+    {"id":"2202a010-b3e8-4757-84c0-913dc0982b22","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":"6251eef2-ccc7-40de-96c4-20ff19a93b3b","amount":500,"created_at":"2026-04-22T10:03:19.773346+00:00","goat_id":null},
+    {"id":"221effcb-203b-433c-9a2c-33d9ea19b42d","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":"6251eef2-ccc7-40de-96c4-20ff19a93b3b","amount":500,"created_at":"2026-04-22T10:03:19.773346+00:00","goat_id":null},
+    {"id":"f6d569b9-2821-4984-b425-55ebb1b22275","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","amount":100,"created_at":"2026-04-22T10:03:41.871935+00:00","goat_id":null},
+    {"id":"d141fd39-2843-43a6-bcd0-80273ec56820","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":"25db13b3-dd18-4b68-98c8-12c101cfe677","amount":100,"created_at":"2026-04-22T10:03:41.871935+00:00","goat_id":null},
+    {"id":"e9c15dc7-31d3-4943-bee8-0972fc8b1340","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3500,"created_at":"2026-04-29T19:46:30.156283+00:00","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"6e3e73bb-65ff-401c-8287-c068e8adc50c","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3500,"created_at":"2026-04-29T19:46:30.156283+00:00","goat_id":"c38e8a74-9100-47b3-bded-796bfc94c711"},
+    {"id":"09bafb7d-bf07-4779-9c60-eb0fb6656744","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3250,"created_at":"2026-04-29T19:46:49.900846+00:00","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"6e5d9d53-9787-4312-8664-be276d071f40","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3250,"created_at":"2026-04-29T19:46:49.900846+00:00","goat_id":"4b706e36-cc39-4e0e-9b95-25a1b204c49f"},
+    {"id":"34a05db8-2434-4a36-8be9-3acb0d7ceebf","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:29:27.797882+00:00","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"5f34059b-6a5e-4a58-8336-d6105e4503ce","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:29:27.797882+00:00","goat_id":"44243960-78e9-40b7-8cd7-265e8975da50"},
+    {"id":"b04a6eaa-2d76-4bf3-8b7c-55c8984b8494","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3000,"created_at":"2026-04-22T09:30:40.146402+00:00","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"771ce439-d393-4a4b-bdd6-fb41b6fcd49b","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3000,"created_at":"2026-04-22T09:30:40.146402+00:00","goat_id":"a954b4d4-648c-456f-ae94-51ea462832bb"},
+    {"id":"820c877e-2df0-4f56-8b64-fce9183fd74f","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3650,"created_at":"2026-04-22T09:39:20.117744+00:00","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"},
+    {"id":"12d1cc03-b69d-4476-9a7a-f4e7d76c3691","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3650,"created_at":"2026-04-22T09:39:20.117744+00:00","goat_id":"9ee33031-aa87-45fe-9718-aae7e8bc49de"},
+    {"id":"78dd7cc1-6612-4e4b-b134-cfe6ab814ecb","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:40:42.281752+00:00","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"b1166fc2-ed14-4d2a-bbe5-6aa9d4b93f45","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3500,"created_at":"2026-04-22T09:40:42.281752+00:00","goat_id":"71ea627e-cb05-4400-a27a-8c07c251b4a2"},
+    {"id":"9dcb2da5-0523-4ab6-a42b-d96bcf5e4906","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":"f3d05817-3f89-463d-8251-af2a68932188","amount":1000,"created_at":"2026-04-22T09:55:02.576264+00:00","goat_id":null},
+    {"id":"45b0d939-0a69-433f-b3c5-a436ceae65e9","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":"f3d05817-3f89-463d-8251-af2a68932188","amount":1000,"created_at":"2026-04-22T09:55:02.576264+00:00","goat_id":null},
+    {"id":"1a46353e-8059-4dab-98b9-572de7ba536b","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","amount":520,"created_at":"2026-04-22T09:59:19.764257+00:00","goat_id":null},
+    {"id":"9725659f-e49f-49c9-bcb0-7e30a70417c7","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":"b80d8d19-ac9e-479c-b882-c2b371057a6a","amount":520,"created_at":"2026-04-22T09:59:19.764257+00:00","goat_id":null},
+    {"id":"ae304d03-7368-4b76-b4f5-b2eaf5efe2f8","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","amount":1000,"created_at":"2026-04-22T10:00:59.502219+00:00","goat_id":null},
+    {"id":"551befa1-9c04-43dd-94ce-b2594fc2a069","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":"ec1fc5fa-5fb4-4a2b-9838-ea0c70509847","amount":1000,"created_at":"2026-04-22T10:00:59.502219+00:00","goat_id":null},
+    {"id":"55335475-9106-4e0d-8cda-10d2bb94997d","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":"1ad78ede-7c79-42e5-9da0-3595c5490d23","amount":500,"created_at":"2026-04-22T10:03:19.773346+00:00","goat_id":null},
+    {"id":"5e2ecc9f-f6b6-43d1-9cf2-8a062fabb590","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":"1ad78ede-7c79-42e5-9da0-3595c5490d23","amount":500,"created_at":"2026-04-22T10:03:19.773346+00:00","goat_id":null},
+    {"id":"1c15b993-6695-408b-a811-37ac86e8ffa4","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","amount":100,"created_at":"2026-04-22T10:03:41.871935+00:00","goat_id":null},
+    {"id":"562ff70b-dd56-4905-89eb-55a00744e46f","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":"4ff3ba0b-3b48-4276-8b50-75b77697947d","amount":100,"created_at":"2026-04-22T10:03:41.871935+00:00","goat_id":null},
+    {"id":"be16a06c-318a-4177-9067-c9a6b1932c14","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3500,"created_at":"2026-04-29T19:46:30.156283+00:00","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"5470610d-6a28-4705-93ab-d6d2588fca89","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3500,"created_at":"2026-04-29T19:46:30.156283+00:00","goat_id":"d73fcfdd-5278-488c-92e3-8ddb5ecb359a"},
+    {"id":"6520cd57-53f7-4280-9c20-9ad3b684b8d6","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"5aae1b97-16b7-4f4c-b362-5f1432c3851d","expense_id":null,"amount":3250,"created_at":"2026-04-29T19:46:49.900846+00:00","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"7eb66159-9cae-4d30-87bf-2371ab00fd24","user_id":"037db256-d084-4b1e-b95b-f69c32066148","owner_id":"d37bddf0-95a7-4319-8e43-70bfff794213","expense_id":null,"amount":3250,"created_at":"2026-04-29T19:46:49.900846+00:00","goat_id":"1cfc76f8-0adf-4796-910d-79c1b6217f7e"},
+    {"id":"d4cac04c-76b9-47ce-9709-4fe5ec0d898a","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"08055716-948b-436c-8503-053507063fab","expense_id":null,"amount":3500,"created_at":"2026-08-07T04:44:57.732472+00:00","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"},
+    {"id":"57e6c0fb-1ac4-42d4-ae08-94beaa18727b","user_id":"2568477f-02da-48df-8bce-92fb253d28fb","owner_id":"18ae6c94-c7e4-4933-b244-9c5801efaf70","expense_id":null,"amount":3500,"created_at":"2026-08-07T04:44:57.732472+00:00","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e"}
+  ],
+  goat_health_records: [],
+  goat_notes: [],
+  goat_images: [
+    {"id":"4de9ad33-6afd-4240-84b6-fcaefecfd9af","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/e360b5af-01a3-4f5b-8c9b-f8f401c20907/0.8317386739690205.blob","caption":"7th april","created_at":"2026-05-04T14:19:21.543285+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"d0a7a588-c05b-46c0-8739-413d1e3d230d","goat_id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/b3f32ef8-01a5-43cc-8631-ef029acb0fdd/0.1236328791642165.blob","caption":"7th april","created_at":"2026-05-04T14:20:56.507683+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"4e3ff446-77eb-43e4-a168-87658da603cc","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/d1d5b91f-e01e-4fed-98b9-ea5001f56395/0.15487841583261686.blob","caption":"7th april","created_at":"2026-05-04T14:22:25.554001+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"1bcd6c49-03b5-4016-aaa6-adc30c2d08bb","goat_id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/b3f32ef8-01a5-43cc-8631-ef029acb0fdd/0.11506849085727577.blob","caption":null,"created_at":"2026-05-13T12:04:48.307106+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"f7274640-955b-464e-b717-939f85a312c6","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/649bd9f4-0804-4fc6-97d1-450e7710013e/0.9793301774246668.blob","caption":null,"created_at":"2026-05-13T12:05:56.702107+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"5f5f9be6-9e19-4e69-9928-2c3984d4a08d","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/d1d5b91f-e01e-4fed-98b9-ea5001f56395/0.7943614844375471.blob","caption":null,"created_at":"2026-05-13T12:09:24.745056+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"bfac2c7d-48b8-4e6a-ad2e-ddcd0c92b656","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/e360b5af-01a3-4f5b-8c9b-f8f401c20907/0.1960021642331552.blob","caption":null,"created_at":"2026-05-13T12:09:56.414551+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"a9c66fbc-f8d3-4938-86e1-3c3591976529","goat_id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/b3f32ef8-01a5-43cc-8631-ef029acb0fdd/0.06831825406664682.blob","caption":null,"created_at":"2026-05-18T06:49:43.045244+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"31ce8ea5-36cd-49f9-94d9-80c9a0bb9695","goat_id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/b3f32ef8-01a5-43cc-8631-ef029acb0fdd/0.9183018687573481.blob","caption":null,"created_at":"2026-05-18T06:49:54.083586+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"768ac502-f5d6-4eb1-aefc-696a8cfb3440","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/e360b5af-01a3-4f5b-8c9b-f8f401c20907/0.30396187271589703.blob","caption":null,"created_at":"2026-05-18T06:50:20.790155+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"b3a52c26-a4a3-458c-8f99-cb10551c3ebe","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/d1d5b91f-e01e-4fed-98b9-ea5001f56395/0.1640624252570827.blob","caption":null,"created_at":"2026-05-18T06:50:54.210189+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"5bc3c3ad-4ebe-41e6-ad99-8fd870a4d7e4","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/649bd9f4-0804-4fc6-97d1-450e7710013e/0.9858194107384038.blob","caption":null,"created_at":"2026-05-18T07:00:59.690444+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"60880877-f0b0-480b-93af-3e18a62c645f","goat_id":"b3f32ef8-01a5-43cc-8631-ef029acb0fdd","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/b3f32ef8-01a5-43cc-8631-ef029acb0fdd/0.3921656727523194.blob","caption":null,"created_at":"2026-06-17T16:52:27.362553+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"52e70a95-3463-4af3-917a-90c7b450f89a","goat_id":"649bd9f4-0804-4fc6-97d1-450e7710013e","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/649bd9f4-0804-4fc6-97d1-450e7710013e/0.9827565063988545.blob","caption":null,"created_at":"2026-06-17T16:53:31.460785+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"6247d2ad-64da-4471-9ee9-c6d784ac885b","goat_id":"d1d5b91f-e01e-4fed-98b9-ea5001f56395","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/d1d5b91f-e01e-4fed-98b9-ea5001f56395/0.5515803090055279.blob","caption":null,"created_at":"2026-06-17T16:53:56.258012+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"},
+    {"id":"3bfc9f73-9ef3-4de3-9c70-31de5332c056","goat_id":"e360b5af-01a3-4f5b-8c9b-f8f401c20907","image_url":"https://lfuwowkkwulmbkgirkch.supabase.co/storage/v1/object/public/goat_images/2568477f-02da-48df-8bce-92fb253d28fb/e360b5af-01a3-4f5b-8c9b-f8f401c20907/0.11948612175936457.blob","caption":null,"created_at":"2026-06-17T16:54:27.600778+00:00","user_id":"2568477f-02da-48df-8bce-92fb253d28fb"}
+  ]
+};
 
 async function migrate() {
-  console.log('🚀 Starting Data Migration from Supabase to Target Postgres...');
-  await pgClient.connect();
+  console.log('🚀 Starting Data Migration to Target Postgres...');
 
   try {
-    for (const table of TABLES) {
-      console.log(`\n📦 Fetching table: ${table}...`);
-      const { data, error } = await supabase.from(table).select('*');
-      
-      if (error) {
-        console.error(`❌ Error fetching ${table} from Supabase:`, error.message);
-        continue;
-      }
-
-      if (!data || data.length === 0) {
+    for (const [table, rows] of Object.entries(DATA_PAYLOAD)) {
+      if (!rows || rows.length === 0) {
         console.log(`ℹ️ Table ${table} is empty. Skipping.`);
         continue;
       }
 
-      console.log(`  Found ${data.length} records in ${table}. Inserting into target DB...`);
+      console.log(`\n📦 Inserting ${rows.length} records into table: ${table}...`);
 
-      for (const row of data) {
+      for (const row of rows) {
         const keys = Object.keys(row);
-        const values = Object.values(row);
-        const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-        
-        const query = `
-          INSERT INTO ${table} (${keys.join(', ')})
-          VALUES (${placeholders})
-          ON CONFLICT (id) DO UPDATE SET
-          ${keys.map((k) => `${k} = EXCLUDED.${k}`).join(', ')};
-        `;
+        if (keys.length === 0) continue;
 
-        await pgClient.query(query, values);
+        await sql`
+          INSERT INTO ${sql(table)} ${sql(row)}
+          ON CONFLICT (id) DO UPDATE SET ${sql(row)}
+        `;
       }
-      console.log(`  ✅ Successfully migrated ${data.length} records into ${table}.`);
+      console.log(`  ✅ Successfully migrated ${rows.length} records into ${table}.`);
     }
 
     console.log('\n🎉 Migration process completed successfully!');
   } catch (err: any) {
     console.error('\n💥 Migration failed:', err.message);
   } finally {
-    await pgClient.end();
+    await sql.end();
   }
 }
 
