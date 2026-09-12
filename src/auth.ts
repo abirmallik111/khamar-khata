@@ -70,22 +70,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async redirect({ url, baseUrl }) {
-      // Ensure all redirects include sub-path /khamar_khata
+      // Fix any accidental /khamar_khata/khamar_khata duplication
+      if (url.includes('/khamar_khata/khamar_khata')) {
+        return url.replace('/khamar_khata/khamar_khata', '/khamar_khata');
+      }
+      // If relative URL, Next.js basePath automatically prepends /khamar_khata
       if (url.startsWith('/')) {
-        return url.startsWith('/khamar_khata') ? url : `/khamar_khata${url}`;
+        return url;
       }
-      try {
-        const urlObj = new URL(url);
-        if (!urlObj.pathname.startsWith('/khamar_khata')) {
-          urlObj.pathname = `/khamar_khata${urlObj.pathname}`;
-        }
-        return urlObj.toString();
-      } catch {
-        return '/khamar_khata/dashboard';
-      }
+      return url;
     }
   },
   pages: {
-    signIn: '/khamar_khata/login'
+    signIn: '/login'
   }
 });
