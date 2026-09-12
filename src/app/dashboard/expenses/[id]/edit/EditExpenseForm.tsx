@@ -91,7 +91,7 @@ export function EditExpenseForm({
 
     try {
       await deleteExpense(expense.id)
-      window.location.href = '/dashboard/expenses'
+      window.location.href = '/khamar_khata/dashboard/expenses'
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       setError(msg)

@@ -39,7 +39,7 @@ export function EditSaleForm({ sale }: EditSaleFormProps) {
 
     try {
       await deleteSale(sale.id)
-      window.location.href = '/dashboard/sales'
+      window.location.href = '/khamar_khata/dashboard/sales'
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       setError(msg)

@@ -136,7 +136,7 @@ export function EditGoatForm({
 
     try {
       await deleteGoat(goat.id)
-      window.location.href = '/dashboard/goats'
+      window.location.href = '/khamar_khata/dashboard/goats'
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       setError(msg)

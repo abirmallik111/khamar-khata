@@ -16,7 +16,7 @@ export async function login(formData: FormData) {
     await signIn('credentials', {
       email,
       password,
-      redirectTo: '/dashboard'
+      redirectTo: '/khamar_khata/dashboard'
     })
   } catch (error: any) {
     if (error?.type === 'CredentialsSignin' || error?.message?.includes('CredentialsSignin')) {
@@ -50,7 +50,7 @@ export async function signup(formData: FormData) {
   await signIn('credentials', {
     email,
     password,
-    redirectTo: '/dashboard'
+    redirectTo: '/khamar_khata/dashboard'
   })
 }
 

@@ -76,7 +76,7 @@ export function BackupRestoreSection() {
         
         // Refresh page after a short delay
         setTimeout(() => {
-          window.location.href = '/dashboard'
+          window.location.href = '/khamar_khata/dashboard'
         }, 2000)
       } catch (error: unknown) {
         setStatus({ type: 'error', message: error instanceof Error ? error.message : 'Failed to restore data.' })

@@ -68,9 +68,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.sub = user.id;
       }
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      // Ensure all redirects include sub-path /khamar_khata
+      if (url.startsWith('/')) {
+        return url.startsWith('/khamar_khata') ? url : `/khamar_khata${url}`;
+      }
+      try {
+        const urlObj = new URL(url);
+        if (!urlObj.pathname.startsWith('/khamar_khata')) {
+          urlObj.pathname = `/khamar_khata${urlObj.pathname}`;
+        }
+        return urlObj.toString();
+      } catch {
+        return '/khamar_khata/dashboard';
+      }
     }
   },
   pages: {
-    signIn: '/login'
+    signIn: '/khamar_khata/login'
   }
 });
