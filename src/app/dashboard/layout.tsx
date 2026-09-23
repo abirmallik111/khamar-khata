@@ -14,6 +14,10 @@ export default async function DashboardLayout({
 }) {
   const session = await auth()
 
+  if (!session?.user) {
+    redirect('/login')
+  }
+
   const handleSignOut = async () => {
     'use server'
     await authSignOut({ redirectTo: '/login' })

@@ -86,15 +86,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async redirect({ url, baseUrl }) {
-      let cleanUrl = url.replace('/khamar_khata/khamar_khata', '/khamar_khata');
-
-      if (cleanUrl.startsWith('/')) {
-        if (cleanUrl.startsWith('/khamar_khata')) {
-          return cleanUrl;
-        }
-        return `/khamar_khata${cleanUrl}`;
-      }
-      return cleanUrl;
+      if (url.startsWith('/')) return url;
+      if (new URL(url).origin === new URL(baseUrl).origin) return url;
+      return baseUrl;
     }
   },
   pages: {
