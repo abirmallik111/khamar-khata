@@ -31,8 +31,26 @@ const nextConfig: NextConfig = {
   output: "standalone",
   turbopack: {},
   images: {
-    unoptimized: true
-  }
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.ts.net',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+      },
+    ],
+  },
 };
 
 export default withPWA(nextConfig);

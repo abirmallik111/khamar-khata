@@ -22,17 +22,14 @@ const toBase64 = (str: string) =>
     ? Buffer.from(str).toString('base64')
     : window.btoa(str)
 
-import { ImageIcon } from 'lucide-react'
-
 export function SmartImage(props: ImageProps) {
   const [isLoading, setLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
 
   if (hasError) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-(--color-surface-high) text-(--color-on-surface-variant)/60 gap-1.5 p-4">
-        <ImageIcon className="w-8 h-8 opacity-40" />
-        <span className="text-[11px] font-medium tracking-tight opacity-75">No Image Available</span>
+      <div className="w-full h-full flex items-center justify-center bg-(--color-surface-high) text-(--color-on-surface-variant) font-medium text-xs italic">
+        Image unavailable
       </div>
     )
   }
