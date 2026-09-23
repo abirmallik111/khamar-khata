@@ -75,7 +75,7 @@ export function AuthForm({ message }: { message?: string }) {
           </button>
         </div>
 
-        <form action={handleAction} className="p-8 flex flex-col gap-6 pb-4">
+        <form action={activeTab === 'register' ? signup : login} className="p-8 flex flex-col gap-6 pb-4">
           {activeTab === 'register' && (
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="name">
