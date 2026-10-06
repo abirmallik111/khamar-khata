@@ -22,10 +22,16 @@ export async function login(formData: FormData) {
       redirect: false
     })
   } catch (error: any) {
+    // If it's Next.js internal redirect, let it pass through
+    if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.message === 'NEXT_REDIRECT') {
+      throw error
+    }
+    console.error('[Login Action Error]:', error)
     if (error?.type === 'CredentialsSignin' || error?.message?.includes('CredentialsSignin')) {
       redirect('/login?message=' + encodeURIComponent('Invalid email or password.'))
     }
-    throw error
+    const errorDetail = error?.cause?.err?.message || error?.message || 'Server or Database connection failed'
+    redirect('/login?message=' + encodeURIComponent('Login error: ' + errorDetail))
   }
 
   redirect('/dashboard')
