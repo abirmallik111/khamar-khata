@@ -17,15 +17,15 @@ const publicSans = Public_Sans({
 export const metadata: Metadata = {
   title: "Khamar Khata Farm Manager",
   description: "Modern, simple, and reliable farm management SaaS.",
-  manifest: "/khamar_khata/manifest.json",
+  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Khamar Khata",
   },
   icons: {
-    icon: "/khamar_khata/logo-final.png",
-    apple: "/khamar_khata/logo-final.png",
+    icon: "/logo-final.png",
+    apple: "/logo-final.png",
   },
 };
 

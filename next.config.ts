@@ -27,12 +27,15 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  basePath: "/khamar_khata",
   output: "standalone",
   turbopack: {},
   images: {
     unoptimized: true,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.abirmallik.website',
+      },
       {
         protocol: 'https',
         hostname: '**.supabase.co',

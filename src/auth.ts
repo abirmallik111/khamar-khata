@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs';
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '5165554ca9d91627615dee993e9b545a9f69607f406b4cead67d5f72e4b83348',
-  basePath: '/khamar_khata/api/auth',
+  basePath: '/api/auth',
   trustHost: true,
   providers: [
     Credentials({
