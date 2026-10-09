@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image, { ImageProps } from 'next/image'
 
 const shimmer = (w: number, h: number) => `
@@ -25,6 +25,11 @@ const toBase64 = (str: string) =>
 export function SmartImage(props: ImageProps) {
   const [isLoading, setLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    setHasError(false)
+    setLoading(true)
+  }, [props.src])
 
   if (hasError) {
     return (
