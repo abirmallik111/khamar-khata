@@ -5,13 +5,18 @@ import {
   expenseCategories,
   owners,
   goats,
+  cows,
   expenses,
   expenseGoatMap,
+  expenseCowMap,
   sales,
   ownerContributions,
   goatHealthRecords,
   goatNotes,
   goatImages,
+  cowHealthRecords,
+  cowNotes,
+  cowImages,
   profiles
 } from '@/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
@@ -41,41 +46,56 @@ export async function exportUserData() {
   const [
     ownersData,
     goatsData,
+    cowsData,
     categoriesData,
     expensesData,
     expenseGoatMapData,
+    expenseCowMapData,
     salesData,
     ownerContributionsData,
     goatHealthRecordsData,
     goatNotesData,
-    goatImagesData
+    goatImagesData,
+    cowHealthRecordsData,
+    cowNotesData,
+    cowImagesData
   ] = await Promise.all([
     db.select().from(owners).where(eq(owners.userId, user.id)),
     db.select().from(goats).where(eq(goats.userId, user.id)),
+    db.select().from(cows).where(eq(cows.userId, user.id)),
     db.select().from(expenseCategories).where(eq(expenseCategories.userId, user.id)),
     db.select().from(expenses).where(eq(expenses.userId, user.id)),
     db.select().from(expenseGoatMap).where(eq(expenseGoatMap.userId, user.id)),
+    db.select().from(expenseCowMap).where(eq(expenseCowMap.userId, user.id)),
     db.select().from(sales).where(eq(sales.userId, user.id)),
     db.select().from(ownerContributions).where(eq(ownerContributions.userId, user.id)),
     db.select().from(goatHealthRecords).where(eq(goatHealthRecords.userId, user.id)),
     db.select().from(goatNotes).where(eq(goatNotes.userId, user.id)),
-    db.select().from(goatImages).where(eq(goatImages.userId, user.id))
+    db.select().from(goatImages).where(eq(goatImages.userId, user.id)),
+    db.select().from(cowHealthRecords).where(eq(cowHealthRecords.userId, user.id)),
+    db.select().from(cowNotes).where(eq(cowNotes.userId, user.id)),
+    db.select().from(cowImages).where(eq(cowImages.userId, user.id))
   ])
 
   return {
-    version: '1.0',
+    version: '1.1',
     exported_at: new Date().toISOString(),
     data: {
       owners: ownersData,
       goats: goatsData,
+      cows: cowsData,
       expense_categories: categoriesData,
       expenses: expensesData,
       expense_goat_map: expenseGoatMapData,
+      expense_cow_map: expenseCowMapData,
       sales: salesData,
       owner_contributions: ownerContributionsData,
       goat_health_records: goatHealthRecordsData,
       goat_notes: goatNotesData,
-      goat_images: goatImagesData
+      goat_images: goatImagesData,
+      cow_health_records: cowHealthRecordsData,
+      cow_notes: cowNotesData,
+      cow_images: cowImagesData
     }
   }
 }

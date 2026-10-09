@@ -13,6 +13,9 @@ import {
 // Goat status ENUM
 export const goatStatusEnum = pgEnum('goat_status', ['active', 'sold', 'sick', 'dead', 'archived']);
 
+// Cow status ENUM
+export const cowStatusEnum = pgEnum('cow_status', ['active', 'sold', 'sick', 'dead', 'archived']);
+
 // Profiles / Users Table
 export const profiles = pgTable('profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -82,6 +85,24 @@ export const goats = pgTable('goats', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
 });
 
+// Cows Inventory
+export const cows = pgTable('cows', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  nameOrTag: text('name_or_tag').notNull(),
+  breed: text('breed'),
+  gender: text('gender'),
+  purchasePrice: numeric('purchase_price').notNull(),
+  purchaseDate: date('purchase_date').notNull(),
+  status: cowStatusEnum('status').default('active').notNull(),
+  imageUrl: text('image_url'),
+  source: text('source').default('purchased'),
+  motherId: uuid('mother_id'),
+  fatherId: uuid('father_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow()
+});
+
 // Expenses
 export const expenses = pgTable('expenses', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -104,11 +125,20 @@ export const expenseGoatMap = pgTable('expense_goat_map', {
   goatId: uuid('goat_id').notNull().references(() => goats.id, { onDelete: 'cascade' })
 });
 
+// Expense to Cow Allocation Map
+export const expenseCowMap = pgTable('expense_cow_map', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  expenseId: uuid('expense_id').notNull().references(() => expenses.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').notNull().references(() => cows.id, { onDelete: 'cascade' })
+});
+
 // Sales
 export const sales = pgTable('sales', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
-  goatId: uuid('goat_id').notNull().unique().references(() => goats.id, { onDelete: 'cascade' }),
+  goatId: uuid('goat_id').references(() => goats.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').references(() => cows.id, { onDelete: 'cascade' }),
   salePrice: numeric('sale_price').notNull(),
   saleDate: date('sale_date').notNull(),
   note: text('note'),
@@ -131,6 +161,7 @@ export const ownerContributions = pgTable('owner_contributions', {
   ownerId: uuid('owner_id').notNull().references(() => owners.id, { onDelete: 'cascade' }),
   expenseId: uuid('expense_id').references(() => expenses.id, { onDelete: 'cascade' }),
   goatId: uuid('goat_id').references(() => goats.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').references(() => cows.id, { onDelete: 'cascade' }),
   amount: numeric('amount').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
 });
@@ -163,6 +194,39 @@ export const goatImages = pgTable('goat_images', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
   goatId: uuid('goat_id').notNull().references(() => goats.id, { onDelete: 'cascade' }),
+  imageUrl: text('image_url').notNull(),
+  caption: text('caption'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
+// Cow Health Records
+export const cowHealthRecords = pgTable('cow_health_records', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').notNull().references(() => cows.id, { onDelete: 'cascade' }),
+  recordType: text('record_type').notNull(),
+  recordDate: date('record_date').notNull(),
+  name: text('name'),
+  notes: text('notes'),
+  nextDate: date('next_date'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+});
+
+// Cow Notes
+export const cowNotes = pgTable('cow_notes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => profiles.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').notNull().references(() => cows.id, { onDelete: 'cascade' }),
+  note: text('note').notNull(),
+  noteDate: date('note_date').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+});
+
+// Cow Images
+export const cowImages = pgTable('cow_images', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+  cowId: uuid('cow_id').notNull().references(() => cows.id, { onDelete: 'cascade' }),
   imageUrl: text('image_url').notNull(),
   caption: text('caption'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()

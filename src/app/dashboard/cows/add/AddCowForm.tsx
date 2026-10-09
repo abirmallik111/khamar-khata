@@ -2,27 +2,27 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Upload, Info, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Upload, AlertTriangle } from 'lucide-react'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import imageCompression from 'browser-image-compression'
-import { addGoat, checkInbreeding } from '../actions'
+import { addCow, checkCowInbreeding } from '../actions'
 import { Owner } from '@/types'
 import { SubmitButton } from '@/components/SubmitButton'
 
-export function AddGoatForm({ 
+export function AddCowForm({ 
   owners, 
-  goats 
+  cows 
 }: { 
   owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[],
-  goats: { id: string, name_or_tag: string, gender: string | null }[]
+  cows: { id: string, name_or_tag: string, gender: string | null }[]
 }) {
   const { currencySymbol, formatCurrency } = useFormat()
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [imageFile, setImageFile] = useState<File | null>(null)
   
-  // New States
+  // Form States
   const [source, setSource] = useState<'purchased' | 'born'>('purchased')
   const [purchasePrice, setPurchasePrice] = useState<string>('')
   const [ownerContributions, setOwnerContributions] = useState<Record<string, string>>({})
@@ -33,7 +33,7 @@ export function AddGoatForm({
   useEffect(() => {
     async function verifyInbreeding() {
       if (motherId && fatherId) {
-        const risk = await checkInbreeding(motherId, fatherId)
+        const risk = await checkCowInbreeding(motherId, fatherId)
         setInbreedingRisk(risk)
       } else {
         setInbreedingRisk(null)
@@ -43,8 +43,11 @@ export function AddGoatForm({
   }, [motherId, fatherId])
   
   // Pedigree Candidates
-  const mothers = goats.filter(g => g.gender === 'Female')
-  const fathers = goats.filter(g => g.gender === 'Male')
+  const femaleGenders = ['Cow', 'Heifer', 'Female Calf', 'Female']
+  const maleGenders = ['Bull', 'Ox/Steer', 'Male Calf', 'Male']
+
+  const mothers = cows.filter(c => !c.gender || femaleGenders.includes(c.gender))
+  const fathers = cows.filter(c => !c.gender || maleGenders.includes(c.gender))
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -98,21 +101,21 @@ export function AddGoatForm({
         }
       }
 
-      await addGoat(formData)
+      await addCow(formData)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred while adding the goat.')
+      setError(err instanceof Error ? err.message : 'An error occurred while adding the cow.')
     }
   }
 
   return (
     <>
       <header className="flex items-center gap-4">
-        <Link href="/dashboard/goats" className="p-2 rounded-full hover:bg-(--color-surface-high) transition-colors text-(--color-on-surface-variant)">
+        <Link href="/dashboard/cows" className="p-2 rounded-full hover:bg-(--color-surface-high) transition-colors text-(--color-on-surface-variant)">
           <ArrowLeft className="w-6 h-6" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight font-display mb-1">Add New Goat</h1>
-          <p className="text-(--color-on-surface-variant) text-sm">Add a new goat to your farm.</p>
+          <h1 className="text-2xl font-bold tracking-tight font-display mb-1">Add New Cow</h1>
+          <p className="text-(--color-on-surface-variant) text-sm">Add a new cow, bull, or calf to your farm.</p>
         </div>
       </header>
 
@@ -126,21 +129,21 @@ export function AddGoatForm({
 
         {/* Source Toggle */}
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-(--color-on-surface-variant)">How did you get this goat?</label>
+          <label className="text-sm font-medium text-(--color-on-surface-variant)">Source (উৎস)</label>
           <div className="flex gap-2 p-1 bg-(--color-surface-high) rounded-md w-fit">
             <button
               type="button"
               onClick={() => setSource('purchased')}
               className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'purchased' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
             >
-              Purchased
+              Purchased (ক্রয়কৃত)
             </button>
             <button
               type="button"
               onClick={() => setSource('born')}
               className={`px-4 py-2 text-sm font-bold rounded-md transition-all ${source === 'born' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:bg-white/50'}`}
             >
-              Born on Farm
+              Born on Farm (ফার্মে জন্ম)
             </button>
           </div>
         </div>
@@ -150,7 +153,7 @@ export function AddGoatForm({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-4 rounded-md bg-(--color-surface-low) border border-(--color-surface-high)">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="mother_id">
-                Select Mother (মা)
+                Select Mother (মা / গাভী)
                 <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/50">Optional</span>
               </label>
               <select
@@ -162,14 +165,14 @@ export function AddGoatForm({
               >
                 <option value="">-- No Mother Selected --</option>
                 {mothers.map(mother => (
-                  <option key={mother.id} value={mother.id}>{mother.name_or_tag}</option>
+                  <option key={mother.id} value={mother.id}>{mother.name_or_tag} ({mother.gender || 'Female'})</option>
                 ))}
               </select>
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-bold text-(--color-on-surface-variant) flex items-center gap-2" htmlFor="father_id">
-                Select Father (বাবা)
+                Select Father (বাবা / ষাঁড়)
                 <span className="text-[10px] font-normal px-1.5 py-0.5 rounded bg-white/50">Optional</span>
               </label>
               <select
@@ -181,7 +184,7 @@ export function AddGoatForm({
               >
                 <option value="">-- No Father Selected --</option>
                 {fathers.map(father => (
-                  <option key={father.id} value={father.id}>{father.name_or_tag}</option>
+                  <option key={father.id} value={father.id}>{father.name_or_tag} ({father.gender || 'Male'})</option>
                 ))}
               </select>
             </div>
@@ -205,26 +208,26 @@ export function AddGoatForm({
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1 flex flex-col gap-2">
             <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="name_or_tag">
-              Name or Tag Number *
+              Name or Tag Number (নাম বা ট্যাগ) *
             </label>
             <input
               required
               id="name_or_tag"
               name="name_or_tag"
               className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
-              placeholder="e.g. G-101 or Billy"
+              placeholder="e.g. C-101, লালু, সুলতান"
             />
           </div>
 
           <div className="flex-1 flex flex-col gap-2">
             <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="breed">
-              Breed
+              Breed (জাত)
             </label>
             <input
               id="breed"
               name="breed"
               className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all"
-              placeholder="e.g. Black Bengal"
+              placeholder="e.g. Sahiwal, Holstein Friesian, Sindhi, Deshi"
             />
           </div>
         </div>
@@ -232,21 +235,27 @@ export function AddGoatForm({
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1 flex flex-col gap-2">
             <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="gender">
-              Gender
+              Category / Gender (শ্রেণী ও লিঙ্গ) *
             </label>
             <select
+              required
               id="gender"
               name="gender"
+              defaultValue="Bull"
               className="rounded-md px-4 py-3 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all appearance-none"
             >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+              <option value="Bull">Bull (ষাঁড়)</option>
+              <option value="Cow">Cow (গাভী)</option>
+              <option value="Heifer">Heifer (বকনা)</option>
+              <option value="Ox/Steer">Ox/Steer (বলদ)</option>
+              <option value="Male Calf">Male Calf (এঁড়ে বাছুর)</option>
+              <option value="Female Calf">Female Calf (বকনা বাছুর)</option>
             </select>
           </div>
 
           <div className="flex-1 flex flex-col gap-2">
             <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="purchase_date">
-              {source === 'purchased' ? 'Purchase Date *' : 'Birth Date *'}
+              {source === 'born' ? 'Birth Date (জন্ম তারিখ) *' : 'Purchase Date (ক্রয় তারিখ) *'}
             </label>
             <input
               required
@@ -260,99 +269,112 @@ export function AddGoatForm({
         </div>
 
         {source === 'purchased' && (
-          <>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="purchase_price">
-                Purchase Price ({currencySymbol}) *
-              </label>
-              <input
-                required
-                type="number"
-                min="0"
-                step="0.01"
-                id="purchase_price"
-                name="purchase_price"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
-                className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all font-display text-2xl font-bold text-primary"
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* Split UI */}
-            <div className="flex flex-col gap-4 p-4 rounded-md border-2 border-dashed border-(--color-surface-high) bg-(--color-surface-low)/30">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-sm uppercase tracking-wider text-(--color-on-surface-variant)">Who Paid?</h3>
-                <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isBalanced ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                  {isBalanced ? 'Balanced' : `Remaining: ${formatCurrency(totalToPay - paidAmount)}`}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {owners.map(owner => (
-                  <div key={owner.id} className="flex flex-col gap-1">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="font-medium">{owner.name}</span>
-                      <span className="text-(--color-on-surface-variant)">{owner.share_percentage}%</span>
-                    </div>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-(--color-on-surface-variant)">{currencySymbol}</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={ownerContributions[owner.id] || ''}
-                        onChange={(e) => handleContributionChange(owner.id, e.target.value)}
-                        className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-primary outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {source === 'born' && (
-          <div className="p-4 rounded-md bg-primary/5 border border-primary/20 flex items-start gap-3">
-            <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-(--color-on-surface-variant)">
-              Goats born on the farm are recorded with a <strong>{currencySymbol}0 purchase price</strong> and will not affect initial investment calculations for partners.
-            </p>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-(--color-on-surface-variant)" htmlFor="purchase_price">
+              Purchase Price ({currencySymbol}) *
+            </label>
+            <input
+              required
+              type="number"
+              min="0"
+              step="0.01"
+              id="purchase_price"
+              name="purchase_price"
+              value={purchasePrice}
+              onChange={(e) => setPurchasePrice(e.target.value)}
+              className="rounded-md px-4 py-4 bg-surface-high border-b-2 border-transparent focus:border-primary outline-none transition-all font-display text-2xl font-bold text-primary"
+              placeholder="0.00"
+            />
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-(--color-on-surface-variant)">
-            Goat Image
-          </label>
-          <div className="relative">
-            <input type="file" id="image" accept="image/*" onChange={handleImageChange} className="hidden" />
-            <label 
-              htmlFor="image" 
-              className={`flex flex-col items-center justify-center w-full aspect-video sm:aspect-[21/9] border-2 border-dashed rounded-md cursor-pointer transition-colors ${previewUrl ? 'border-primary bg-primary/5' : 'border-(--color-surface-high) bg-(--color-surface-low) hover:bg-(--color-surface-high)'} overflow-hidden`}
-            >
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain" />
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-(--color-on-surface-variant)">
-                  <Upload className="w-8 h-8" />
-                  <span className="text-sm font-medium">Click to upload an image</span>
+        {/* Partner / Owner Contributions (Purchased only) */}
+        {source === 'purchased' && owners.length > 0 && (
+          <div className="flex flex-col gap-4 p-4 rounded-md border-2 border-dashed border-(--color-surface-high) bg-(--color-surface-low)/30">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-sm uppercase tracking-wider text-(--color-on-surface-variant)">Partner Payment Split</h3>
+              <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                isBalanced ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              }`}>
+                {isBalanced ? 'Balanced' : 'Unbalanced'}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {owners.map(owner => (
+                <div key={owner.id} className="flex flex-col gap-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-medium">{owner.name}</span>
+                    <span className="text-(--color-on-surface-variant)">{owner.share_percentage}% share</span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-(--color-on-surface-variant)">{currencySymbol}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={ownerContributions[owner.id] || ''}
+                      onChange={(e) => handleContributionChange(owner.id, e.target.value)}
+                      className="w-full pl-7 pr-4 py-2 bg-(--color-surface-lowest) border border-(--color-surface-high) rounded-md text-sm focus:border-primary outline-none transition-all"
+                    />
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            <div className="mt-2 pt-4 border-t border-(--color-surface-high) grid grid-cols-2 gap-4 text-sm font-bold">
+               <div className="flex flex-col">
+                 <span className="text-[10px] uppercase text-(--color-on-surface-variant)">Total Allocated</span>
+                 <span className={`${isBalanced ? 'text-green-600' : 'text-red-500'} font-display`}>{formatCurrency(paidAmount)}</span>
+               </div>
+               <div className="flex flex-col text-right">
+                 <span className="text-[10px] uppercase text-(--color-on-surface-variant)">Target Price</span>
+                 <span className="text-(--color-on-background) font-display">
+                   {formatCurrency(totalToPay)}
+                 </span>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Photo Upload */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-(--color-on-surface-variant)">Photo</label>
+          <div className="flex items-center gap-4">
+            <div className="relative w-24 h-24 rounded-md border-2 border-dashed border-(--color-surface-high) flex items-center justify-center overflow-hidden bg-(--color-surface-high)/20 hover:border-primary transition-colors cursor-pointer group">
+              {previewUrl ? (
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <Upload className="w-6 h-6 text-(--color-on-surface-variant) group-hover:text-primary transition-colors" />
               )}
-            </label>
+              <input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+            <p className="text-xs text-(--color-on-surface-variant)">
+              Upload a clear photo of the cow. Supported formats: JPG, PNG, WebP. Automatically compressed for fast loading.
+            </p>
           </div>
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">
-          <Link href="/dashboard/goats" className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors">Cancel</Link>
-          <SubmitButton
-            loadingText="Saving..."
-            disabled={source === 'purchased' && !isBalanced}
-            className="bg-gradient-primary text-white px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          <Link 
+            href="/dashboard/cows"
+            className="px-6 py-3 rounded-full font-semibold text-primary hover:bg-(--color-surface-high) transition-colors"
           >
-            Register Goat
+            Cancel
+          </Link>
+          <SubmitButton
+            loadingText="Saving Cow..."
+            disabled={source === 'purchased' && !isBalanced}
+            className="bg-gradient-primary text-(--color-on-primary) px-8 py-3 rounded-full font-semibold shadow-ambient hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            Add Cow
           </SubmitButton>
         </div>
       </form>

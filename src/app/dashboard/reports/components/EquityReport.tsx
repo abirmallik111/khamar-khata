@@ -25,15 +25,15 @@ export function EquityReport({ data, currency }: EquityReportProps) {
       {/* Overview Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-md shadow-ambient border-l-4 border-primary">
-          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Total Partner Capital</p>
+          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Total Partner Investment</p>
           <p className="text-2xl font-bold font-display">{formatCurrency(totalFarmInvestment, currency)}</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-ambient border-l-4 border-green-500">
-          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Realized Dividends</p>
+          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Total Profit Shared</p>
           <p className="text-2xl font-bold font-display text-green-600">{formatCurrency(totalFarmRealizedProfit, currency)}</p>
         </div>
         <div className="bg-white p-6 rounded-md shadow-ambient border-l-4 border-blue-500">
-          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Farm Book Value</p>
+          <p className="text-xs text-(--color-on-surface-variant) font-bold uppercase tracking-wider mb-1">Total Farm Value</p>
           <p className="text-2xl font-bold font-display text-blue-600">{formatCurrency(totalFarmInvestment + totalFarmRealizedProfit, currency)}</p>
         </div>
       </div>
@@ -42,18 +42,18 @@ export function EquityReport({ data, currency }: EquityReportProps) {
       <div className="bg-white rounded-md shadow-ambient overflow-hidden">
         <div className="p-6 border-b border-(--color-surface-high) flex items-center gap-2">
           <Wallet className="w-5 h-5 text-primary" />
-          <h2 className="font-bold text-lg">Partner Equity Breakdown</h2>
+          <h2 className="font-bold text-lg">Partner Share & Profit Details</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-(--color-surface-low) text-xs font-bold uppercase tracking-wider text-(--color-on-surface-variant)">
                 <th className="px-6 py-4">Partner</th>
-                <th className="px-6 py-4">Equity Share</th>
-                <th className="px-6 py-4">Total Contribution</th>
-                <th className="px-6 py-4 text-green-600">Realized Profit</th>
-                <th className="px-6 py-4 text-blue-600">Active Assets</th>
-                <th className="px-6 py-4 text-right">Net Value</th>
+                <th className="px-6 py-4">Share %</th>
+                <th className="px-6 py-4">Total Invested</th>
+                <th className="px-6 py-4 text-green-600">Profit from Sales</th>
+                <th className="px-6 py-4 text-blue-600">Current Animals Cost</th>
+                <th className="px-6 py-4 text-right">Total Value</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-(--color-surface-high)">
@@ -104,8 +104,8 @@ export function EquityReport({ data, currency }: EquityReportProps) {
             <TrendingUp className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h4 className="font-bold mb-1">Growth Projection</h4>
-            <p className="text-sm text-(--color-on-surface-variant)">Based on current active assets, your farm is projected to generate an additional {formatCurrency(totalFarmRealizedProfit * 1.2, currency)} in realized profit over the next 6 months.</p>
+            <h4 className="font-bold mb-1">Expected Growth</h4>
+            <p className="text-sm text-(--color-on-surface-variant)">Based on your current animals, your farm can make around {formatCurrency(totalFarmRealizedProfit * 1.2, currency)} profit in the next 6 months.</p>
           </div>
         </div>
         <div className="bg-blue-500/5 p-6 rounded-md border border-blue-500/20 flex gap-4">
@@ -113,8 +113,8 @@ export function EquityReport({ data, currency }: EquityReportProps) {
             <PiggyBank className="w-6 h-6 text-blue-500" />
           </div>
           <div>
-            <h4 className="font-bold mb-1">Reserve Requirement</h4>
-            <p className="text-sm text-(--color-on-surface-variant)">We recommend maintaining a cash reserve of 15% of total investment ({formatCurrency(totalFarmInvestment * 0.15, currency)}) for emergency medical and feed contingencies.</p>
+            <h4 className="font-bold mb-1">Emergency Fund Tip</h4>
+            <p className="text-sm text-(--color-on-surface-variant)">Keep around 15% of total investment ({formatCurrency(totalFarmInvestment * 0.15, currency)}) in cash for urgent medicine and feed costs.</p>
           </div>
         </div>
       </div>

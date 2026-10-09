@@ -55,9 +55,9 @@ export default async function ReportsPage(props: {
             <div className="p-2 bg-(--color-surface-low) rounded-full">
               <BarChart3 className="w-6 h-6 text-(--color-primary)" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight font-display">Performance Reports</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-display">Farm Reports</h1>
           </div>
-          <p className="text-(--color-on-surface-variant) text-sm">Financial health overview and herd ROI analytics.</p>
+          <p className="text-(--color-on-surface-variant) text-sm">Overview of farm sales, expenses, and profits.</p>
         </div>
       </header>
 

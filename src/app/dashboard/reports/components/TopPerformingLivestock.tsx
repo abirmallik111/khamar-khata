@@ -24,7 +24,7 @@ export function TopPerformingLivestock({ data }: { data: GoatROI[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="font-bold text-lg font-display px-1">Top Performing Livestock</h2>
+      <h2 className="font-bold text-lg font-display px-1">Top Profitable Animals</h2>
       <div className="grid grid-cols-1 gap-3">
         {performers.map((goat) => {
           const isGold = (goat.roi_percentage || 0) >= 100;
@@ -44,7 +44,7 @@ export function TopPerformingLivestock({ data }: { data: GoatROI[] }) {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm">{goat.name_or_tag}</h4>
-                  <p className="text-[10px] text-(--color-on-surface-variant) uppercase tracking-wider font-medium">{goat.breed || 'Premium Breed'}</p>
+                  <p className="text-[10px] text-(--color-on-surface-variant) uppercase tracking-wider font-medium">{goat.breed || 'Good Breed'}</p>
                 </div>
               </div>
               <div className="text-right">

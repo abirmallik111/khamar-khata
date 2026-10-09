@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { sales, goats, profiles } from '@/db/schema'
+import { sales, goats, cows, profiles } from '@/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { auth } from '@/auth'
 import Link from 'next/link'
@@ -24,11 +24,16 @@ export default async function SalesPage() {
         salePrice: sales.salePrice,
         saleDate: sales.saleDate,
         note: sales.note,
+        goatId: sales.goatId,
+        cowId: sales.cowId,
         goatName: goats.nameOrTag,
-        goatPurchasePrice: goats.purchasePrice
+        goatPurchasePrice: goats.purchasePrice,
+        cowName: cows.nameOrTag,
+        cowPurchasePrice: cows.purchasePrice
       })
         .from(sales)
         .leftJoin(goats, eq(sales.goatId, goats.id))
+        .leftJoin(cows, eq(sales.cowId, cows.id))
         .where(eq(sales.userId, userId))
         .orderBy(desc(sales.saleDate))
     : []
@@ -38,7 +43,7 @@ export default async function SalesPage() {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display mb-1">Sales Record</h1>
-          <p className="text-(--color-on-surface-variant) text-sm">Track your goat sales and calculate individual profit margins.</p>
+          <p className="text-(--color-on-surface-variant) text-sm">Track your goat and cattle sales and calculate individual profit margins.</p>
         </div>
         <Link 
           href="/dashboard/sales/add" 
@@ -51,12 +56,14 @@ export default async function SalesPage() {
 
       {salesList.length === 0 ? (
         <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-12 text-center text-(--color-on-surface-variant) mt-4">
-          No sales recorded yet. Click &quot;Record Sale&quot; when you sell a goat.
+          No sales recorded yet. Click &quot;Record Sale&quot; when you sell a goat or cow.
         </div>
       ) : (
         <div className="flex flex-col gap-4 mt-4">
           {salesList.map((sale) => {
-            const purchasePrice = Number(sale.goatPurchasePrice || 0)
+            const isCow = !!sale.cowId
+            const animalName = isCow ? (sale.cowName || 'Unknown') : (sale.goatName || 'Unknown')
+            const purchasePrice = Number(isCow ? sale.cowPurchasePrice : sale.goatPurchasePrice) || 0
             const salePrice = Number(sale.salePrice)
             const profit = salePrice - purchasePrice
             const profitMargin = purchasePrice ? ((profit / purchasePrice) * 100).toFixed(1) : '0'
@@ -64,12 +71,13 @@ export default async function SalesPage() {
             return (
               <div 
                 key={sale.id} 
-                className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col sm:flex-row border-l-4 border-l-blue-500"
+                className={`bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden flex flex-col sm:flex-row border-l-4 ${isCow ? 'border-l-amber-600' : 'border-l-blue-500'}`}
               >
                 <div className="p-4 sm:p-6 flex-1 flex flex-col gap-1">
                   <div className="flex items-center gap-3">
-                    <span className="font-bold text-lg text-(--color-on-background)">
-                      Goat: {sale.goatName || 'Unknown'}
+                    <span className="font-bold text-lg text-(--color-on-background) flex items-center gap-1.5">
+                      <span>{isCow ? '🐄 Cow:' : '🐐 Goat:'}</span>
+                      <span>{animalName}</span>
                     </span>
                     <span className="bg-(--color-surface-high) text-(--color-on-surface-variant) text-xs px-2 py-1 rounded-md font-medium">
                       {new Date(sale.saleDate).toLocaleDateString(undefined, { dateStyle: 'long' })}

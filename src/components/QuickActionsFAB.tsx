@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, X, DollarSign, Activity, ShoppingBag, PlusCircle, MessageSquare } from 'lucide-react'
+import { Plus, X, DollarSign, Activity, ShoppingBag } from 'lucide-react'
+import { GoatIcon, CowIcon } from '@/components/icons/AnimalIcons'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -17,10 +18,17 @@ export function QuickActionsFAB() {
   const actions = [
     { 
       label: 'Add New Goat', 
-      icon: PlusCircle, 
+      icon: GoatIcon, 
       href: '/dashboard/goats/add',
-      color: 'bg-emerald-500',
+      color: 'bg-emerald-600',
       delay: 'delay-0'
+    },
+    { 
+      label: 'Add New Cow', 
+      icon: CowIcon, 
+      href: '/dashboard/cows/add',
+      color: 'bg-amber-600',
+      delay: 'delay-75'
     },
     { 
       label: 'Record Expense', 
@@ -46,7 +54,7 @@ export function QuickActionsFAB() {
   ]
 
   return (
-    <div className="fixed bottom-24 right-6 sm:bottom-8 sm:right-10 z-[60] print:hidden pointer-events-none">
+    <div className="fixed bottom-6 right-5 sm:bottom-8 sm:right-10 z-[60] print:hidden pointer-events-none">
       {/* Backdrop */}
       {isOpen && (
         <div 

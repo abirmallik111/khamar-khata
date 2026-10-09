@@ -176,13 +176,13 @@ export function ReportsUI({ initialData, equityData }: ReportsUIProps) {
           onClick={() => setActiveTab('main')}
           className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'main' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:text-primary'}`}
         >
-          Overview & Performance
+          Overview & Profit
         </button>
         <button
           onClick={() => setActiveTab('equity')}
           className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'equity' ? 'bg-white shadow-sm text-primary' : 'text-(--color-on-surface-variant) hover:text-primary'}`}
         >
-          Partner Equity & Dividends
+          Partner Shares & Profits
         </button>
       </div>
 
@@ -199,21 +199,21 @@ export function ReportsUI({ initialData, equityData }: ReportsUIProps) {
             trend={{ value: '12.4%', positive: netProfit >= 0 }}
           />
           <SummaryCard 
-            title="Operating Expenses" 
+            title="Total Money Spent" 
             value={formatCompactNumber(overview.total_investment, currency)} 
             icon={Package} 
             colorClass="bg-orange-100 text-orange-700"
             subtitle="Steady"
           />
           <SummaryCard 
-            title="Avg ROI / Goat" 
+            title="Profit Rate / ROI" 
             value={`${(netProfit / (overview.total_investment || 1) * 100).toFixed(1)}%`} 
             icon={Activity} 
             colorClass="bg-blue-100 text-blue-700"
             trend={{ value: 'New', positive: true }}
           />
           <SummaryCard 
-            title="Active Livestock" 
+            title="Active Animals" 
             value={overview.total_goats} 
             icon={Users} 
             colorClass="bg-purple-100 text-purple-700"
@@ -245,11 +245,11 @@ export function ReportsUI({ initialData, equityData }: ReportsUIProps) {
           <div className="max-w-md">
             <h3 className="font-bold text-xl mb-2">Need a custom report?</h3>
             <p className="text-sm text-orange-800 opacity-80">
-              Our agronomists can help you build specialized reports for breeding cycles and genetic tracking.
+              We can help you build custom reports for breeding cycles and family history tracking.
             </p>
           </div>
           <button className="bg-orange-800 text-white px-8 py-3 rounded-full font-bold hover:brightness-110 transition-all shadow-md">
-            Contact Advisor
+            Contact Us
           </button>
         </div>
       </>

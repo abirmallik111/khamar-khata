@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { LogOut } from 'lucide-react'
-import { SidebarLinks, BottomNav } from '@/components/DashboardNav'
+import { SidebarLinks } from '@/components/DashboardNav'
+import { MobileNav } from '@/components/MobileNav'
 import { QuickActionsFAB } from '@/components/QuickActionsFAB'
 import logoImg from '../../../public/logo-final.png'
 
@@ -54,44 +55,24 @@ export default async function DashboardLayout({
         </form>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-y-auto relative pb-20 md:pb-0">
-        {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between px-4 py-2 bg-(--color-surface-lowest) sticky top-0 z-10 shadow-ambient border-b border-(--color-surface-high)">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="relative w-10 h-10 overflow-hidden rounded-full border border-(--color-primary)/20">
-              <Image 
-                src={logoImg} 
-                alt="Logo" 
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm leading-none text-(--color-primary) font-display">Khamar</span>
-              <span className="font-bold text-sm leading-none text-amber-900 font-display">Khata</span>
-            </div>
-          </Link>
-          <form action={handleSignOut}>
-            <button className="text-error p-2 rounded-full hover:bg-error/10 transition-colors" aria-label="Sign out">
-              <LogOut className="w-5 h-5" />
-            </button>
-          </form>
-        </header>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col overflow-y-auto relative pb-8 md:pb-0">
+        {/* Mobile Header & Slide-out Hamburger Side Menu */}
+        <MobileNav 
+          user={{
+            name: session.user.name,
+            email: session.user.email,
+          }}
+          signOutAction={handleSignOut}
+        />
 
-        <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
+        <div className="flex-1 p-3.5 sm:p-6 md:p-8 max-w-5xl mx-auto w-full">
           {children}
         </div>
 
-        {/* Global Quick Actions */}
+        {/* Global Quick Actions FAB */}
         <QuickActionsFAB />
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden glass-panel fixed bottom-0 w-full z-50 border-t border-(--color-surface-high)">
-        <BottomNav />
-      </nav>
     </div>
   )
 }

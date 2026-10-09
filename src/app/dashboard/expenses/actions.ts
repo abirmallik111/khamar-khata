@@ -41,6 +41,7 @@ export async function addExpense(formData: FormData) {
   const dueAmount = parseFloat(formData.get('due_amount') as string) || 0
   const paymentStatus = formData.get('payment_status') as string
   const goatIds = formData.getAll('goat_ids') as string[]
+  const cowIds = formData.getAll('cow_ids') as string[]
   const ownerContributions = JSON.parse(formData.get('owner_contributions') as string || '[]')
 
   await db.execute(sql`
@@ -54,11 +55,15 @@ export async function addExpense(formData: FormData) {
       ${dueAmount}::numeric,
       ${paymentStatus},
       ${goatIds}::uuid[],
-      ${JSON.stringify(ownerContributions)}::jsonb
+      ${JSON.stringify(ownerContributions)}::jsonb,
+      ${cowIds}::uuid[]
     )
   `)
 
   revalidatePath('/dashboard/expenses')
+  revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
+  revalidatePath('/dashboard')
   redirect('/dashboard/expenses')
 }
 
@@ -73,6 +78,7 @@ export async function updateExpense(id: string, formData: FormData) {
   const dueAmount = parseFloat(formData.get('due_amount') as string) || 0
   const paymentStatus = formData.get('payment_status') as string
   const goatIds = formData.getAll('goat_ids') as string[]
+  const cowIds = formData.getAll('cow_ids') as string[]
   const ownerContributions = JSON.parse(formData.get('owner_contributions') as string || '[]')
 
   await db.execute(sql`
@@ -87,11 +93,15 @@ export async function updateExpense(id: string, formData: FormData) {
       ${dueAmount}::numeric,
       ${paymentStatus},
       ${goatIds}::uuid[],
-      ${JSON.stringify(ownerContributions)}::jsonb
+      ${JSON.stringify(ownerContributions)}::jsonb,
+      ${cowIds}::uuid[]
     )
   `)
 
   revalidatePath('/dashboard/expenses')
+  revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
+  revalidatePath('/dashboard')
   redirect('/dashboard/expenses')
 }
 
@@ -99,6 +109,9 @@ export async function deleteExpense(id: string) {
   const user = await getAuthUser()
   await db.delete(expenses).where(and(eq(expenses.id, id), eq(expenses.userId, user.id)))
   revalidatePath('/dashboard/expenses')
+  revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
+  revalidatePath('/dashboard')
 }
 
 export async function markAsPaid(id: string, amount: number) {
@@ -111,4 +124,7 @@ export async function markAsPaid(id: string, amount: number) {
   }).where(and(eq(expenses.id, id), eq(expenses.userId, user.id)))
 
   revalidatePath('/dashboard/expenses')
+  revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
+  revalidatePath('/dashboard')
 }

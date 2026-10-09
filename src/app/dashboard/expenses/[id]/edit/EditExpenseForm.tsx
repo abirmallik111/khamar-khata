@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
+import { GoatIcon, CowIcon } from '@/components/icons/AnimalIcons'
 import { useFormat } from '@/hooks/useFormat'
 import Link from 'next/link'
 import { updateExpense, deleteExpense } from '../../actions'
@@ -12,15 +13,19 @@ export function EditExpenseForm({
   expense,
   categories, 
   goats, 
+  cows = [],
   owners,
   initialGoatIds,
+  initialCowIds = [],
   initialContributions
 }: { 
   expense: Expense,
   categories: Category[], 
   goats: Pick<Goat, 'id' | 'name_or_tag'>[],
+  cows?: { id: string, name_or_tag: string }[],
   owners: Pick<Owner, 'id' | 'name' | 'share_percentage'>[],
   initialGoatIds: string[],
+  initialCowIds?: string[],
   initialContributions: { owner_id: string, amount: number }[]
 }) {
   const { currencySymbol } = useFormat()
@@ -28,6 +33,7 @@ export function EditExpenseForm({
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedGoats, setSelectedGoats] = useState<Set<string>>(new Set(initialGoatIds))
+  const [selectedCows, setSelectedCows] = useState<Set<string>>(new Set(initialCowIds))
   
   // Financial Split State
   const [totalAmount, setTotalAmount] = useState<string>(expense.amount.toString())
@@ -37,13 +43,19 @@ export function EditExpenseForm({
     initialContribMap[c.owner_id] = c.amount.toString()
   })
   const [ownerContributions, setOwnerContributions] = useState<Record<string, string>>(initialContribMap)
-  
 
   const toggleGoat = (id: string) => {
     const next = new Set(selectedGoats)
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setSelectedGoats(next)
+  }
+
+  const toggleCow = (id: string) => {
+    const next = new Set(selectedCows)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedCows(next)
   }
 
   const handleContributionChange = (ownerId: string, value: string) => {
@@ -66,6 +78,7 @@ export function EditExpenseForm({
 
     try {
       Array.from(selectedGoats).forEach(goatId => formData.append('goat_ids', goatId))
+      Array.from(selectedCows).forEach(cowId => formData.append('cow_ids', cowId))
       formData.set('paid_amount', paidAmount.toString())
       formData.set('due_amount', dueAmount.toString())
       formData.set('payment_status', paymentStatus)
@@ -234,21 +247,54 @@ export function EditExpenseForm({
           />
         </div>
 
+        {/* Apply to Goats */}
         <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-(--color-surface-high)">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-(--color-on-surface-variant)">Apply to goats?</label>
+            <label className="text-sm font-medium text-(--color-on-surface-variant) flex items-center gap-1.5">
+              <GoatIcon size={16} />
+              <span>Tag to specific goats?</span>
+            </label>
             <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md font-bold">{selectedGoats.size} Selected</span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
-            {goats.map(goat => {
-              const isSelected = selectedGoats.has(goat.id)
-              return (
-                <button type="button" key={goat.id} onClick={() => toggleGoat(goat.id)} className={`px-3 py-2 text-sm rounded-md border text-left transition-all ${isSelected ? 'border-primary bg-primary/10 font-bold text-primary' : 'border-(--color-surface-high) hover:border-primary/50'}`}>
-                  {goat.name_or_tag}
-                </button>
-              )
-            })}
+          {goats.length === 0 ? (
+            <p className="text-xs text-(--color-on-surface-variant) italic">No goats available.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1">
+              {goats.map(goat => {
+                const isSelected = selectedGoats.has(goat.id)
+                return (
+                  <button type="button" key={goat.id} onClick={() => toggleGoat(goat.id)} className={`px-3 py-2 text-sm rounded-md border text-left transition-all ${isSelected ? 'border-primary bg-primary/10 font-bold text-primary' : 'border-(--color-surface-high) hover:border-primary/50'}`}>
+                    {goat.name_or_tag}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Apply to Cows */}
+        <div className="flex flex-col gap-3 mt-2 pt-4 border-t border-(--color-surface-high)">
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-medium text-(--color-on-surface-variant) flex items-center gap-1.5">
+              <CowIcon size={16} />
+              <span>Tag to specific cows?</span>
+            </label>
+            <span className="text-xs bg-amber-600/10 text-amber-700 px-2 py-1 rounded-md font-bold">{selectedCows.size} Selected</span>
           </div>
+          {cows.length === 0 ? (
+            <p className="text-xs text-(--color-on-surface-variant) italic">No cows available.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1">
+              {cows.map(cow => {
+                const isSelected = selectedCows.has(cow.id)
+                return (
+                  <button type="button" key={cow.id} onClick={() => toggleCow(cow.id)} className={`px-3 py-2 text-sm rounded-md border text-left transition-all ${isSelected ? 'border-amber-600 bg-amber-600/10 font-bold text-amber-700' : 'border-(--color-surface-high) hover:border-amber-600/50'}`}>
+                    {cow.name_or_tag}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="mt-4 pt-6 border-t border-(--color-surface-high) flex justify-end gap-4">

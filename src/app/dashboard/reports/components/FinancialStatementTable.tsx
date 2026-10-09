@@ -18,7 +18,7 @@ export function FinancialStatementTable({ categories, totalRevenue, totalInvestm
   return (
     <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden">
       <div className="p-4 bg-(--color-tertiary) text-white flex justify-between items-center">
-        <h2 className="font-bold font-display">Financial Summary</h2>
+        <h2 className="font-bold font-display">Income & Expenses Summary</h2>
         <span className="text-[10px] font-bold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full">FY 2024-25</span>
       </div>
       
@@ -27,9 +27,9 @@ export function FinancialStatementTable({ categories, totalRevenue, totalInvestm
           <thead>
             <tr className="text-[10px] text-(--color-on-surface-variant) uppercase tracking-widest font-bold border-b border-(--color-surface-high)">
               <th className="px-6 py-4">Category</th>
-              <th className="px-6 py-4 text-right">Gross Value</th>
-              <th className="px-6 py-4 text-right">Adjustment</th>
-              <th className="px-6 py-4 text-right">Net Total</th>
+              <th className="px-6 py-4 text-right">Amount</th>
+              <th className="px-6 py-4 text-right">Deduction</th>
+              <th className="px-6 py-4 text-right">Total</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-(--color-surface-high)">
@@ -37,7 +37,7 @@ export function FinancialStatementTable({ categories, totalRevenue, totalInvestm
             <tr className="hover:bg-(--color-surface-low) transition-colors">
               <td className="px-6 py-4 font-bold flex items-center gap-3">
                 <div className="w-2 h-8 rounded-full bg-primary"></div>
-                Livestock Sales
+                Animal Sales
               </td>
               <td className="px-6 py-4 text-right font-medium">{formatCompactNumber(totalRevenue, currency)}</td>
               <td className="px-6 py-4 text-right text-(--color-on-surface-variant)">-{currencySymbol}0.00</td>

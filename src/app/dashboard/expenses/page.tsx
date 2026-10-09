@@ -1,5 +1,5 @@
 import { db } from '@/db'
-import { expenses, expenseCategories, expenseGoatMap, profiles } from '@/db/schema'
+import { expenses, expenseCategories, expenseGoatMap, expenseCowMap, profiles } from '@/db/schema'
 import { eq, desc, sql } from 'drizzle-orm'
 import { auth } from '@/auth'
 import Link from 'next/link'
@@ -38,10 +38,14 @@ export default async function ExpensesPage() {
 
   const mappedExpenses = []
   for (const exp of expensesList) {
-    const countRes = await db.select({ count: sql<number>`count(*)` }).from(expenseGoatMap).where(eq(expenseGoatMap.expenseId, exp.id))
+    const [goatCountRes, cowCountRes] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(expenseGoatMap).where(eq(expenseGoatMap.expenseId, exp.id)),
+      db.select({ count: sql<number>`count(*)` }).from(expenseCowMap).where(eq(expenseCowMap.expenseId, exp.id))
+    ])
     mappedExpenses.push({
       ...exp,
-      goatCount: Number(countRes[0]?.count || 0)
+      goatCount: Number(goatCountRes[0]?.count || 0),
+      cowCount: Number(cowCountRes[0]?.count || 0)
     })
   }
 
@@ -50,7 +54,7 @@ export default async function ExpensesPage() {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-display mb-1">Expenses</h1>
-          <p className="text-(--color-on-surface-variant) text-sm">Track your farm expenditures and allocate them to goats.</p>
+          <p className="text-(--color-on-surface-variant) text-sm">Track your farm expenditures and allocate them to goats or cows.</p>
         </div>
         <Link 
           href="/dashboard/expenses/add" 
@@ -92,11 +96,18 @@ export default async function ExpensesPage() {
                   {expense.note && (
                     <p className="text-(--color-on-surface-variant) text-sm mt-2 italic">{expense.note}</p>
                   )}
-                  {expense.goatCount > 0 && (
-                    <div className="text-xs text-primary font-bold mt-2 uppercase tracking-tight">
-                      Applied to {expense.goatCount} goat(s)
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {expense.goatCount > 0 && (
+                      <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase tracking-tight">
+                        🐐 Applied to {expense.goatCount} goat(s)
+                      </span>
+                    )}
+                    {expense.cowCount > 0 && (
+                      <span className="text-[11px] bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded font-bold uppercase tracking-tight">
+                        🐄 Applied to {expense.cowCount} cow(s)
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="bg-(--color-surface-low)/50 sm:w-64 p-4 sm:p-6 flex flex-col justify-center items-end gap-3 sm:border-l border-(--color-surface-high)">

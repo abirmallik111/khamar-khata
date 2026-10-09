@@ -18,11 +18,11 @@ export function ProfitTrendsChart({ data }: { data: TrendData[] }) {
   return (
     <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient">
       <div className="flex justify-between items-center mb-12">
-        <h2 className="font-bold text-xl font-display">Monthly Profit Trends</h2>
+        <h2 className="font-bold text-xl font-display">Monthly Profit & Sales</h2>
         <div className="flex gap-6 text-xs font-medium">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-primary shadow-sm"></div>
-            <span className="text-(--color-on-surface-variant)">Revenue</span>
+            <span className="text-(--color-on-surface-variant)">Sales</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-sm bg-(--color-surface-high) shadow-sm"></div>
@@ -38,7 +38,7 @@ export function ProfitTrendsChart({ data }: { data: TrendData[] }) {
             <div className="absolute bottom-full mb-2 hidden group-hover:block z-20 bg-(--color-surface-lowest) text-(--color-on-surface) text-[11px] p-3 rounded-xl shadow-xl border border-(--color-surface-high) whitespace-nowrap transition-all scale-in">
               <div className="flex flex-col gap-1">
                 <div className="flex justify-between gap-4">
-                  <span className="text-(--color-on-surface-variant)">Revenue:</span>
+                  <span className="text-(--color-on-surface-variant)">Sales:</span>
                   <span className="font-bold text-primary">{formatCurrency(d.total_sale)}</span>
                 </div>
                 <div className="flex justify-between gap-4">

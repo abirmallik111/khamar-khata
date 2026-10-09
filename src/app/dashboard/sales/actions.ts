@@ -20,32 +20,50 @@ async function getAuthUser(): Promise<{ id: string }> {
 export async function addSale(formData: FormData) {
   const user = await getAuthUser()
 
-  const goatId = formData.get('goat_id') as string
+  const animalType = (formData.get('animal_type') as string) || (formData.get('cow_id') ? 'cow' : 'goat')
+  const animalId = ((animalType === 'cow' ? formData.get('cow_id') : formData.get('goat_id')) || formData.get('animal_id')) as string
   const salePrice = parseFloat(formData.get('sale_price') as string)
   const saleDate = formData.get('sale_date') as string
   const note = (formData.get('note') as string) || ''
 
   try {
-    await db.execute(sql`
-      SELECT add_sale_and_update_goat(
-        ${user.id}::uuid,
-        ${goatId}::uuid,
-        ${salePrice}::numeric,
-        ${saleDate}::date,
-        ${note}
-      )
-    `)
+    if (animalType === 'cow') {
+      await db.execute(sql`
+        SELECT add_cow_sale_and_update_cow(
+          ${user.id}::uuid,
+          ${animalId}::uuid,
+          ${salePrice}::numeric,
+          ${saleDate}::date,
+          ${note}
+        )
+      `)
+    } else {
+      await db.execute(sql`
+        SELECT add_sale_and_update_goat(
+          ${user.id}::uuid,
+          ${animalId}::uuid,
+          ${salePrice}::numeric,
+          ${saleDate}::date,
+          ${note}
+        )
+      `)
+    }
   } catch (error: any) {
     console.error('Error recording sale:', error)
     if (error?.code === '23505') {
-      throw new Error('This goat has already been sold.')
+      throw new Error(`This ${animalType} has already been sold.`)
     }
     throw new Error('Failed to record sale: ' + error.message)
   }
 
   revalidatePath('/dashboard/sales')
   revalidatePath('/dashboard/goats')
-  revalidatePath(`/dashboard/goats/${goatId}`)
+  revalidatePath('/dashboard/cows')
+  if (animalType === 'cow') {
+    revalidatePath(`/dashboard/cows/${animalId}`)
+  } else {
+    revalidatePath(`/dashboard/goats/${animalId}`)
+  }
   revalidatePath('/dashboard')
   redirect('/dashboard/sales')
 }
@@ -65,6 +83,7 @@ export async function updateSale(id: string, formData: FormData) {
 
   revalidatePath('/dashboard/sales')
   revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
   revalidatePath('/dashboard')
   redirect('/dashboard/sales')
 }
@@ -78,5 +97,6 @@ export async function deleteSale(id: string) {
 
   revalidatePath('/dashboard/sales')
   revalidatePath('/dashboard/goats')
+  revalidatePath('/dashboard/cows')
   revalidatePath('/dashboard')
 }

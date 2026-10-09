@@ -1,11 +1,25 @@
 import { db } from '@/db'
-import { goats, expenses, sales, expenseCategories, owners, ownerContributions, profiles } from '@/db/schema'
+import {
+  goats,
+  cows,
+  expenses,
+  expenseGoatMap,
+  expenseCowMap,
+  sales,
+  expenseCategories,
+  owners,
+  ownerContributions,
+  profiles
+} from '@/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { auth } from '@/auth'
-import Link from 'next/link'
-import { PlusCircle, List, Users } from 'lucide-react'
-import { formatCurrency, formatDate } from '@/utils/format'
-import { ExpensePieChart } from '@/components/ExpensePieChart'
+import {
+  DashboardOverview,
+  OverviewStats,
+  ActivityItem,
+  OwnerItem
+} from './DashboardOverview'
+import { CurrencyCode } from '@/contexts/SettingsContext'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -16,212 +30,280 @@ export default async function DashboardPage() {
     if (firstUser) userId = firstUser.id
   }
 
-  const [profile] = userId ? await db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : []
-  const currencyCode = (profile?.currency || 'BDT') as any
+  const [
+    profileRes,
+    goatsData,
+    cowsData,
+    expensesRaw,
+    goatMaps,
+    cowMaps,
+    salesData,
+    allOwners,
+    contributionsData
+  ] = await Promise.all([
+    userId ? db.select({ currency: profiles.currency }).from(profiles).where(eq(profiles.id, userId)).limit(1) : [],
+    userId
+      ? db
+          .select({
+            id: goats.id,
+            nameOrTag: goats.nameOrTag,
+            purchasePrice: goats.purchasePrice,
+            status: goats.status,
+            createdAt: goats.createdAt
+          })
+          .from(goats)
+          .where(eq(goats.userId, userId))
+          .orderBy(desc(goats.createdAt))
+      : [],
+    userId
+      ? db
+          .select({
+            id: cows.id,
+            nameOrTag: cows.nameOrTag,
+            purchasePrice: cows.purchasePrice,
+            status: cows.status,
+            createdAt: cows.createdAt
+          })
+          .from(cows)
+          .where(eq(cows.userId, userId))
+          .orderBy(desc(cows.createdAt))
+      : [],
+    userId
+      ? db
+          .select({
+            id: expenses.id,
+            amount: expenses.amount,
+            categoryId: expenses.categoryId,
+            categoryName: expenseCategories.name,
+            createdAt: expenses.createdAt
+          })
+          .from(expenses)
+          .leftJoin(expenseCategories, eq(expenses.categoryId, expenseCategories.id))
+          .where(eq(expenses.userId, userId))
+          .orderBy(desc(expenses.createdAt))
+      : [],
+    userId
+      ? db
+          .select({
+            expenseId: expenseGoatMap.expenseId,
+            goatId: expenseGoatMap.goatId
+          })
+          .from(expenseGoatMap)
+          .where(eq(expenseGoatMap.userId, userId))
+      : [],
+    userId
+      ? db
+          .select({
+            expenseId: expenseCowMap.expenseId,
+            cowId: expenseCowMap.cowId
+          })
+          .from(expenseCowMap)
+          .where(eq(expenseCowMap.userId, userId))
+      : [],
+    userId
+      ? db
+          .select({
+            id: sales.id,
+            goatId: sales.goatId,
+            cowId: sales.cowId,
+            salePrice: sales.salePrice,
+            createdAt: sales.createdAt,
+            goatName: goats.nameOrTag,
+            cowName: cows.nameOrTag
+          })
+          .from(sales)
+          .leftJoin(goats, eq(sales.goatId, goats.id))
+          .leftJoin(cows, eq(sales.cowId, cows.id))
+          .where(eq(sales.userId, userId))
+          .orderBy(desc(sales.createdAt))
+      : [],
+    userId ? db.select({ id: owners.id, name: owners.name }).from(owners).where(eq(owners.userId, userId)) : [],
+    userId
+      ? db
+          .select({ ownerId: ownerContributions.ownerId, amount: ownerContributions.amount })
+          .from(ownerContributions)
+          .where(eq(ownerContributions.userId, userId))
+      : []
+  ])
 
-  const capitalData = userId ? await db.select({ purchasePrice: goats.purchasePrice }).from(goats).where(eq(goats.userId, userId)) : []
-  const expenseData = userId ? await db.select({ amount: expenses.amount }).from(expenses).where(eq(expenses.userId, userId)) : []
-  const salesData = userId ? await db.select({ salePrice: sales.salePrice }).from(sales).where(eq(sales.userId, userId)) : []
+  const currencyCode = (profileRes?.[0]?.currency || 'BDT') as CurrencyCode
 
-  const recentGoats = userId
-    ? await db.select({ id: goats.id, name_or_tag: goats.nameOrTag, created_at: goats.createdAt, purchase_price: goats.purchasePrice })
-        .from(goats)
-        .where(eq(goats.userId, userId))
-        .orderBy(desc(goats.createdAt))
-        .limit(3)
-    : []
+  // Calculate expense mappings
+  const expenseGoatCountMap = new Map<string, number>()
+  for (const m of goatMaps) {
+    expenseGoatCountMap.set(m.expenseId, (expenseGoatCountMap.get(m.expenseId) || 0) + 1)
+  }
 
-  const recentExpensesRaw = userId
-    ? await db.select({
-        id: expenses.id,
-        amount: expenses.amount,
-        created_at: expenses.createdAt,
-        categoryName: expenseCategories.name
-      })
-        .from(expenses)
-        .leftJoin(expenseCategories, eq(expenses.categoryId, expenseCategories.id))
-        .where(eq(expenses.userId, userId))
-        .orderBy(desc(expenses.createdAt))
-        .limit(3)
-    : []
+  const expenseCowCountMap = new Map<string, number>()
+  for (const m of cowMaps) {
+    expenseCowCountMap.set(m.expenseId, (expenseCowCountMap.get(m.expenseId) || 0) + 1)
+  }
 
-  const allOwners = userId
-    ? await db.select({ id: owners.id, name: owners.name }).from(owners).where(eq(owners.userId, userId))
-    : []
+  let totalGoatExpenses = 0
+  let totalCowExpenses = 0
+  let totalGeneralExpenses = 0
 
-  const contributionsData = userId
-    ? await db.select({ ownerId: ownerContributions.ownerId, amount: ownerContributions.amount }).from(ownerContributions).where(eq(ownerContributions.userId, userId))
-    : []
+  const goatCategoryMap: Record<string, number> = {}
+  const cowCategoryMap: Record<string, number> = {}
+  const combinedCategoryMap: Record<string, number> = {}
 
-  const categoryExpensesRaw = userId
-    ? await db.select({ amount: expenses.amount, categoryName: expenseCategories.name })
-        .from(expenses)
-        .leftJoin(expenseCategories, eq(expenses.categoryId, expenseCategories.id))
-        .where(eq(expenses.userId, userId))
-    : []
+  for (const exp of expensesRaw) {
+    const amt = Number(exp.amount)
+    const cat = exp.categoryName || 'Uncategorized'
+    combinedCategoryMap[cat] = (combinedCategoryMap[cat] || 0) + amt
 
-  const totalCapital = capitalData.reduce((sum, g) => sum + Number(g.purchasePrice), 0)
-  const totalExpense = expenseData.reduce((sum, e) => sum + Number(e.amount), 0)
-  const totalSales = salesData.reduce((sum, s) => sum + Number(s.salePrice), 0)
-  const profit = totalSales - (totalCapital + totalExpense)
+    const goatCount = expenseGoatCountMap.get(exp.id) || 0
+    const cowCount = expenseCowCountMap.get(exp.id) || 0
+    const totalMapped = goatCount + cowCount
 
-  const categoryMap: Record<string, number> = {}
-  categoryExpensesRaw.forEach(exp => {
-    const catName = exp.categoryName || 'Uncategorized'
-    categoryMap[catName] = (categoryMap[catName] || 0) + Number(exp.amount)
-  })
-  const chartData = Object.entries(categoryMap).map(([name, value]) => ({ name, value }))
+    if (totalMapped > 0) {
+      const goatPart = amt * (goatCount / totalMapped)
+      const cowPart = amt * (cowCount / totalMapped)
+      totalGoatExpenses += goatPart
+      totalCowExpenses += cowPart
 
-  const ownersWithTotals = allOwners.map(owner => {
+      if (goatPart > 0) {
+        goatCategoryMap[cat] = (goatCategoryMap[cat] || 0) + goatPart
+      }
+      if (cowPart > 0) {
+        cowCategoryMap[cat] = (cowCategoryMap[cat] || 0) + cowPart
+      }
+    } else {
+      totalGeneralExpenses += amt
+    }
+  }
+
+  // Capital
+  const goatCapital = goatsData.reduce((sum, g) => sum + Number(g.purchasePrice), 0)
+  const cowCapital = cowsData.reduce((sum, c) => sum + Number(c.purchasePrice), 0)
+  const combinedCapital = goatCapital + cowCapital
+
+  // Sales
+  const goatSales = salesData.filter((s) => s.goatId !== null)
+  const cowSales = salesData.filter((s) => s.cowId !== null)
+
+  const goatSalesTotal = goatSales.reduce((sum, s) => sum + Number(s.salePrice), 0)
+  const cowSalesTotal = cowSales.reduce((sum, s) => sum + Number(s.salePrice), 0)
+  const combinedSalesTotal = goatSalesTotal + cowSalesTotal
+
+  // Profit/Loss
+  const goatProfit = goatSalesTotal - (goatCapital + totalGoatExpenses)
+  const cowProfit = cowSalesTotal - (cowCapital + totalCowExpenses)
+  const totalFarmExpenses = totalGoatExpenses + totalCowExpenses + totalGeneralExpenses
+  const combinedProfit = combinedSalesTotal - (combinedCapital + totalFarmExpenses)
+
+  // Counts
+  const goatCounts = {
+    total: goatsData.length,
+    active: goatsData.filter((g) => g.status === 'active').length,
+    sick: goatsData.filter((g) => g.status === 'sick').length,
+    sold: goatsData.filter((g) => g.status === 'sold').length,
+    dead: goatsData.filter((g) => g.status === 'dead').length
+  }
+
+  const cowCounts = {
+    total: cowsData.length,
+    active: cowsData.filter((c) => c.status === 'active').length,
+    sick: cowsData.filter((c) => c.status === 'sick').length,
+    sold: cowsData.filter((c) => c.status === 'sold').length,
+    dead: cowsData.filter((c) => c.status === 'dead').length
+  }
+
+  const combinedCounts = {
+    total: goatCounts.total + cowCounts.total,
+    active: goatCounts.active + cowCounts.active,
+    sick: goatCounts.sick + cowCounts.sick,
+    sold: goatCounts.sold + cowCounts.sold,
+    dead: goatCounts.dead + cowCounts.dead
+  }
+
+  const goatStats: OverviewStats = {
+    capital: goatCapital,
+    expenses: totalGoatExpenses,
+    sales: goatSalesTotal,
+    profit: goatProfit,
+    counts: goatCounts,
+    chartData: Object.entries(goatCategoryMap).map(([name, value]) => ({ name, value: Math.round(value) }))
+  }
+
+  const cowStats: OverviewStats = {
+    capital: cowCapital,
+    expenses: totalCowExpenses,
+    sales: cowSalesTotal,
+    profit: cowProfit,
+    counts: cowCounts,
+    chartData: Object.entries(cowCategoryMap).map(([name, value]) => ({ name, value: Math.round(value) }))
+  }
+
+  const combinedStats = {
+    capital: combinedCapital,
+    expenses: totalFarmExpenses,
+    generalExpenses: totalGeneralExpenses,
+    sales: combinedSalesTotal,
+    profit: combinedProfit,
+    counts: combinedCounts,
+    chartData: Object.entries(combinedCategoryMap).map(([name, value]) => ({ name, value: Math.round(value) }))
+  }
+
+  // Activity
+  const allActivity: ActivityItem[] = [
+    ...goatsData.map((g) => ({
+      type: 'goat' as const,
+      animalType: 'goat' as const,
+      id: g.id,
+      label: `Added Goat: ${g.nameOrTag}`,
+      amount: Number(g.purchasePrice),
+      date: new Date(g.createdAt).toISOString()
+    })),
+    ...cowsData.map((c) => ({
+      type: 'cow' as const,
+      animalType: 'cow' as const,
+      id: c.id,
+      label: `Added Cow: ${c.nameOrTag}`,
+      amount: Number(c.purchasePrice),
+      date: new Date(c.createdAt).toISOString()
+    })),
+    ...expensesRaw.map((e) => {
+      const gCount = expenseGoatCountMap.get(e.id) || 0
+      const cCount = expenseCowCountMap.get(e.id) || 0
+      const animalType: 'goat' | 'cow' | 'general' =
+        gCount > 0 && cCount === 0 ? 'goat' : cCount > 0 && gCount === 0 ? 'cow' : 'general'
+
+      return {
+        type: 'expense' as const,
+        animalType,
+        id: e.id,
+        label: `Expense: ${e.categoryName || 'Uncategorized'}`,
+        amount: Number(e.amount),
+        date: new Date(e.createdAt).toISOString()
+      }
+    }),
+    ...salesData.map((s) => ({
+      type: 'sale' as const,
+      animalType: s.cowId ? ('cow' as const) : ('goat' as const),
+      id: s.id,
+      label: s.cowId ? `Sold Cow: ${s.cowName || 'Cow'}` : `Sold Goat: ${s.goatName || 'Goat'}`,
+      amount: Number(s.salePrice),
+      date: new Date(s.createdAt).toISOString()
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  // Owners
+  const ownersWithTotals: OwnerItem[] = allOwners.map((owner) => {
     const totalContribution = contributionsData
-      .filter(c => c.ownerId === owner.id)
+      .filter((c) => c.ownerId === owner.id)
       .reduce((sum, c) => sum + Number(c.amount), 0)
-    return { ...owner, totalContribution }
+    return { id: owner.id, name: owner.name, totalContribution }
   })
-
-  const activity = [
-    ...recentGoats.map(g => ({ type: 'goat' as const, date: new Date(g.created_at).getTime(), data: g })),
-    ...recentExpensesRaw.map(e => ({ type: 'expense' as const, date: new Date(e.created_at).getTime(), data: { ...e, expense_categories: { name: e.categoryName } } }))
-  ].sort((a, b) => b.date - a.date).slice(0, 4)
 
   return (
-    <div className="flex flex-col gap-6 pb-20 md:pb-0">
-      <header className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight font-display mb-1">Overview</h1>
-          <p className="text-(--color-on-surface-variant) text-sm">Your farm&apos;s financial health at a glance.</p>
-        </div>
-      </header>
-
-      {/* Quick Actions */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 hide-scrollbar">
-        <Link href="/dashboard/goats/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-primary text-primary px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-primary hover:text-white transition-colors">
-          <PlusCircle className="w-5 h-5" />
-          Add Goat
-        </Link>
-        <Link href="/dashboard/expenses/add" className="flex-shrink-0 bg-(--color-surface-lowest) border border-error text-error px-4 py-2 rounded-full font-semibold flex items-center gap-2 hover:bg-error hover:text-white transition-colors">
-          <PlusCircle className="w-5 h-5" />
-          Log Expense
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-primary">
-          <span className="text-sm font-medium text-(--color-on-surface-variant)">Total Capital (Goat Cost)</span>
-          <span className="text-3xl font-display font-bold">{formatCurrency(totalCapital, currencyCode)}</span>
-        </div>
-        
-        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-error">
-          <span className="text-sm font-medium text-(--color-on-surface-variant)">Total Expenses</span>
-          <span className="text-3xl font-display font-bold">{formatCurrency(totalExpense, currencyCode)}</span>
-        </div>
-
-        <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2 border-l-4 border-blue-500">
-          <span className="text-sm font-medium text-(--color-on-surface-variant)">Total Sales</span>
-          <span className="text-3xl font-display font-bold">{formatCurrency(totalSales, currencyCode)}</span>
-        </div>
-      </div>
-
-      <div className="bg-(--color-surface-lowest) p-6 rounded-md shadow-ambient flex flex-col gap-2">
-        <span className="text-sm font-medium text-(--color-on-surface-variant)">Net Profit / Loss</span>
-        <span className={`text-4xl font-display font-bold ${profit >= 0 ? 'text-primary' : 'text-error'}`}>
-          {profit >= 0 && totalSales > 0 ? '+' : ''}{formatCurrency(profit, currencyCode)}
-        </span>
-        {profit < 0 && totalSales === 0 && (
-          <span className="text-xs text-(--color-on-surface-variant) mt-1">Note: No sales recorded yet. Your profit is currently tracking as an investment deficit.</span>
-        )}
-      </div>
-
-      {/* Bottom Section: Activity and Owners */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
-        {/* Recent Activity */}
-        <section className="lg:col-span-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold tracking-tight">Recent Activity</h2>
-          </div>
-          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden h-[350px] flex flex-col border border-(--color-surface-high)">
-            {activity.length === 0 ? (
-              <div className="p-8 text-center text-(--color-on-surface-variant) flex-1 flex items-center justify-center">
-                No recent activity found.
-              </div>
-            ) : (
-              <div className="flex flex-col overflow-y-auto">
-                {activity.map((item, idx) => (
-                  <div key={`${item.type}-${idx}`} className={`p-4 flex justify-between items-center hover:bg-(--color-surface-low) transition-colors ${idx !== activity.length - 1 ? 'border-b border-(--color-surface-high)' : ''}`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-full ${item.type === 'goat' ? 'bg-primary/10 text-primary' : 'bg-error/10 text-error'}`}>
-                        {item.type === 'goat' ? <PlusCircle className="w-5 h-5" /> : <List className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <p className="font-bold text-(--color-on-background) text-sm line-clamp-1">
-                          {item.type === 'goat' 
-                            ? `Added Goat: ${item.data.name_or_tag}` 
-                            : `Expense: ${(item.data as any).expense_categories?.name || 'Uncategorized'}`
-                          }
-                        </p>
-                        <p className="text-[10px] text-(--color-on-surface-variant)">{formatDate(new Date(item.date).toISOString())}</p>
-                      </div>
-                    </div>
-                    <span className={`font-bold text-sm ${item.type === 'goat' ? 'text-(--color-on-background)' : 'text-error'}`}>
-                      {item.type === 'expense' ? '-' : ''}{formatCurrency(item.type === 'goat' ? (item.data as any).purchase_price : (item.data as any).amount, currencyCode)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Expense Breakdown Chart */}
-        <section className="lg:col-span-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold tracking-tight">Expense Breakdown</h2>
-          </div>
-          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient p-4 h-[350px] border border-(--color-surface-high) flex flex-col items-stretch">
-            <ExpensePieChart data={chartData} currency={currencyCode} />
-          </div>
-        </section>
-
-        {/* Farm Owners Widget */}
-        <section className="lg:col-span-1">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold tracking-tight">Farm Partners / Owners</h2>
-          </div>
-          <div className="bg-(--color-surface-lowest) rounded-md shadow-ambient overflow-hidden h-[300px] flex flex-col border-l-4 border-purple-500">
-            {ownersWithTotals.length === 0 ? (
-              <div className="p-8 text-center text-(--color-on-surface-variant) flex-1 flex items-center justify-center">
-                No owners defined. Go to Settings to add partners.
-              </div>
-            ) : (
-              <div className="flex flex-col overflow-y-auto">
-                {ownersWithTotals.map((owner, idx) => (
-                  <Link 
-                    key={owner.id} 
-                    href={`/dashboard/settings/owners/${owner.id}`}
-                    className={`p-4 flex justify-between items-center hover:bg-(--color-surface-low) transition-colors ${idx !== ownersWithTotals.length - 1 ? 'border-b border-(--color-surface-high)' : ''}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 rounded-full bg-purple-100 text-purple-600">
-                        <Users className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-(--color-on-background) text-sm">{owner.name}</p>
-                        <p className="text-[10px] text-(--color-on-surface-variant) uppercase tracking-wider font-semibold">Total Investment</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-sm text-purple-600">
-                        {formatCurrency(owner.totalContribution, currencyCode)}
-                      </span>
-                      <p className="text-[10px] text-(--color-on-surface-variant) font-medium">View Profile</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
-    </div>
+    <DashboardOverview
+      currencyCode={currencyCode}
+      goatStats={goatStats}
+      cowStats={cowStats}
+      combinedStats={combinedStats}
+      allActivity={allActivity}
+      owners={ownersWithTotals}
+    />
   )
 }
